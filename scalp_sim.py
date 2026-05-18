@@ -527,10 +527,11 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     }
     body.compact #drawer-backdrop.open { display: block; }
     /* Compress chart inner bars on mobile */
-    #chart-title-bar { height: 34px; gap: 6px; padding: 0 6px; }
+    #chart-title-bar { height: 34px; gap: 4px; padding: 0 6px; }
     #ticker-header { top: 34px; height: 18px; font-size: 11px; gap: 6px; padding: 0 6px; }
     #session-progress { top: 52px; height: 5px; }
-    #ctrl-time { font-size: 16px !important; padding: 0 6px !important; letter-spacing: 0 !important; }
+    #ctrl-time { font-size: 16px !important; padding: 0 4px !important; letter-spacing: 0 !important; }
+    #ctb-account { font-size: 14px !important; padding: 0 4px !important; }
     .day-divider { top: 34px; }
     /* Keep +/- zoom in the chart title bar -- shrink them a touch on mobile. */
     #chart-zoom-in, #chart-zoom-out { width: 26px !important; height: 26px !important; font-size: 14px !important; }
@@ -670,6 +671,11 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   }
   #chart-title-bar .ctb-ticker { color: #66b3ff; font-weight: 700; }
   #chart-title-bar .ctb-candle-label { color: #cccccc; }
+  /* Zoom-group wraps +/- so they sit tight together (2px gap), even when
+     the parent chart-title-bar has a larger gap between unrelated items. */
+  #chart-title-bar .ctb-zoom-group {
+    display: inline-flex; align-items: center; gap: 2px;
+  }
   #ticker-header {
     position: absolute;
     top: 44px;     /* directly below chart-title-bar */
@@ -1003,10 +1009,13 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         <option value="1800">30 min</option>
         <option value="3600">Hourly</option>
       </select>
-      <button id="chart-zoom-in" title="Zoom in (fewer bars visible, same as scroll wheel up)" style="background:#1a1a1a;color:#cccccc;border:1px solid #444;border-radius:3px;width:24px;height:24px;font-size:14px;font-weight:700;cursor:pointer;line-height:1;padding:0;margin-left:2px">&plus;</button>
-      <button id="chart-zoom-out" title="Zoom out (more bars visible, same as scroll wheel down)" style="background:#1a1a1a;color:#cccccc;border:1px solid #444;border-radius:3px;width:24px;height:24px;font-size:14px;font-weight:700;cursor:pointer;line-height:1;padding:0">&minus;</button>
+      <span class="ctb-zoom-group">
+        <button id="chart-zoom-in" title="Zoom in (fewer bars visible, same as scroll wheel up)" style="background:#1a1a1a;color:#cccccc;border:1px solid #444;border-radius:3px;width:24px;height:24px;font-size:14px;font-weight:700;cursor:pointer;line-height:1;padding:0;margin:0">&plus;</button>
+        <button id="chart-zoom-out" title="Zoom out (more bars visible, same as scroll wheel down)" style="background:#1a1a1a;color:#cccccc;border:1px solid #444;border-radius:3px;width:24px;height:24px;font-size:14px;font-weight:700;cursor:pointer;line-height:1;padding:0;margin:0">&minus;</button>
+      </span>
       <span style="flex:1"></span>
       <span id="ctrl-time" style="font-family:Consolas,monospace;font-size:28px;font-weight:800;color:#f6c143;padding:0 12px;letter-spacing:0.05em;line-height:1" title="Current simulated time">--:--:-- --</span>
+      <span id="ctb-account" style="font-family:Consolas,monospace;font-size:18px;font-weight:700;color:#ccc;padding:0 4px;line-height:1" title="Account value (starting + realized + unrealized P&amp;L)">$10,000</span>
     </div>
     <div id="ticker-header">
       <span class="th-ticker"><span class="th-dot"></span><span id="th-symbol">--</span></span>
@@ -2128,6 +2137,14 @@ function updateUI() {
   const accountValueCad = accountValueUsd * USD_TO_CAD;
   document.getElementById('hud-account-now').textContent =
     'Account now: $' + accountValueUsd.toFixed(2) + ' USD  /  $' + accountValueCad.toFixed(2) + ' CAD';
+  // Compact account display in the chart title bar (mobile-friendly).
+  const ctbAcc = document.getElementById('ctb-account');
+  if (ctbAcc) {
+    ctbAcc.textContent = '$' + Math.round(accountValueUsd).toLocaleString();
+    ctbAcc.style.color = totalPnL > 0.01 ? '#4ade80'
+                       : totalPnL < -0.01 ? '#f87171'
+                       : '#ccc';
+  }
   hudPnlUsd.classList.remove('hud-flat', 'hud-positive', 'hud-negative');
   hudPnlCad.classList.remove('hud-flat', 'hud-positive', 'hud-negative');
   if (totalPnL === 0 && position.side === 'flat') {
