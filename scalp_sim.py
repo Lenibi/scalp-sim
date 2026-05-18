@@ -1532,20 +1532,17 @@ if (_bSel) {
 }
 
 // +/- chart zoom buttons (same effect as mouse wheel on the chart).
-// "+" = zoom in (fewer bars visible). "-" = zoom out (more bars visible).
-// Width changes by 25% per click; right edge stays anchored to live candle.
+// "+" = bars become wider (zoom in on recent candles).
+// "-" = bars become narrower (more history visible).
+// barSpacing-based zoom works reliably on mobile, unlike setVisibleLogicalRange
+// which the touch handler can override during pinch/swipe.
 function chartZoom(direction) {
-  const range = chart.timeScale().getVisibleLogicalRange();
-  if (!range) return;
-  const data = candleSeries.data() || [];
-  const lastEdge = data.length - 0.5;
-  const width = range.to - range.from;
-  const factor = direction === 'in' ? 0.8 : 1.25;
-  const newWidth = Math.max(5, width * factor);          // floor at 5 bars
-  chart.timeScale().setVisibleLogicalRange({
-    from: lastEdge - newWidth,
-    to: lastEdge,
-  });
+  const ts = chart.timeScale();
+  const cur = ts.options().barSpacing || 6;
+  const factor = direction === 'in' ? 1.4 : 1 / 1.4;
+  const next = Math.max(2, Math.min(80, cur * factor));
+  ts.applyOptions({ barSpacing: next });
+  ts.scrollToRealTime();   // keep the live candle anchored on the right
   rescaleY();
 }
 document.getElementById('chart-zoom-in').addEventListener('click', () => chartZoom('in'));
@@ -1738,9 +1735,11 @@ const candleSeries = chart.addCandlestickSeries({
   lastValueVisible: true,
 });
 
-// rightOffset 0 = live candle flush against the right axis (no gap).
-// shiftVisibleRangeOnNewBar auto-scrolls left as new bars arrive.
-chart.timeScale().applyOptions({ rightOffset: 0, shiftVisibleRangeOnNewBar: true });
+// rightOffset > 0 keeps the live candle off the right axis (so the price
+// label box has breathing room on mobile). shiftVisibleRangeOnNewBar
+// auto-scrolls left as new bars arrive.
+const RIGHT_OFFSET = 4;
+chart.timeScale().applyOptions({ rightOffset: RIGHT_OFFSET, shiftVisibleRangeOnNewBar: true });
 candleSeries.setData(PREV_BARS);
 function anchorRight() {
   chart.timeScale().scrollToRealTime();
@@ -2650,9 +2649,10 @@ chartEl.addEventListener('wheel', () => {
   setTimeout(() => {
     const range = chart.timeScale().getVisibleLogicalRange();
     if (range) {
-      const lastEdge = (candleSeries.data() || []).length - 0.5;
+      const lastEdge = (candleSeries.data() || []).length - 0.5 + RIGHT_OFFSET;
       const width = range.to - range.from;
-      // Always re-anchor right edge to last bar (no gap on right after zoom)
+      // Re-anchor right edge to (last bar + RIGHT_OFFSET) so the live candle
+      // always has breathing room from the price axis after a wheel zoom.
       chart.timeScale().setVisibleLogicalRange({
         from: lastEdge - width, to: lastEdge,
       });
@@ -2708,7 +2708,35 @@ function stepN(seconds) {
   }
 }
 // STEP = one tick (smallest unit). 1m/5m = multi-tick jumps.
-document.getElementById('btn-step').addEventListener('click', () => stepN(TICK_SECONDS));
+// Press-and-hold any of these for >= 1 second to enter repeat mode (acts
+// like holding the Space bar). Tap = single fire.
+function attachHoldRepeat(btn, fireFn, initialDelay = 1000, interval = 110) {
+  let holdTimer = null;
+  let repeatTimer = null;
+  let suppressClick = false;
+  function start(e) {
+    suppressClick = true;
+    fireFn();    // immediate single fire on press
+    holdTimer = setTimeout(() => {
+      repeatTimer = setInterval(fireFn, interval);
+    }, initialDelay);
+  }
+  function stop() {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = null; }
+    // Let the synthetic click that may follow pointerup be swallowed first.
+    setTimeout(() => { suppressClick = false; }, 400);
+  }
+  btn.addEventListener('pointerdown', start);
+  btn.addEventListener('pointerup', stop);
+  btn.addEventListener('pointercancel', stop);
+  btn.addEventListener('pointerleave', stop);
+  // Block the synthetic click after touch so we don't double-fire.
+  btn.addEventListener('click', e => {
+    if (suppressClick) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+}
+
 const _step1m = document.getElementById('btn-step-1m');
 const _step5m = document.getElementById('btn-step-5m');
 // In 5-sec mode show +1m and +5m. In 1-min mode show only +5m
@@ -2722,8 +2750,9 @@ if (FIVE_SEC_MODE) {
   document.getElementById('btn-step').textContent = 'STEP +1m';
   _step5m.textContent = '+5m';
 }
-_step1m.addEventListener('click', () => stepN(60));
-_step5m.addEventListener('click', () => stepN(300));
+attachHoldRepeat(document.getElementById('btn-step'), () => stepN(TICK_SECONDS));
+attachHoldRepeat(_step1m, () => stepN(60));
+attachHoldRepeat(_step5m, () => stepN(300));
 document.getElementById('btn-play').addEventListener('click', () => { if (playing) pause(); else play(); });
 document.getElementById('btn-reset').addEventListener('click', () => {
   if (confirm('Reset the session? You will lose your open position, trades, and progress for this day.')) reset();
@@ -2772,13 +2801,12 @@ renderAllTimeStats();
 renderDayLog();
 // No pre-roll: chart loads in "pre-market" state (prev bars visible,
 // clock at --:--:--). First STEP click reveals the first tick.
-// Initial view: right-anchored window. Live candle on the right (with 3-slot
-// rightOffset breathing room), prev-day context to its left.
+// Initial view: right-anchored window with RIGHT_OFFSET breathing room.
 setTimeout(() => {
   const data = candleSeries.data() || [];
   if (data.length > 0) {
     const visible = Math.min(data.length, 25);
-    const lastEdge = data.length - 0.5;       // flush right (no rightOffset)
+    const lastEdge = data.length - 0.5 + RIGHT_OFFSET;
     chart.timeScale().setVisibleLogicalRange({
       from: lastEdge - visible,
       to: lastEdge,
