@@ -868,6 +868,15 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
+    /* Mobile: prevent long-press from selecting the button text and from
+       triggering the iOS callout / double-tap-to-zoom. */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   button:hover { background: #2a3038; }
   button.primary { background: #2a6dd2; border-color: #2a6dd2; color: white; }
@@ -1543,7 +1552,7 @@ function chartZoom(direction) {
   const next = Math.max(2, Math.min(80, cur * factor));
   ts.applyOptions({ barSpacing: next });
   ts.scrollToRealTime();   // keep the live candle anchored on the right
-  rescaleY();
+  rescaleY(true);          // explicit user zoom -- refit Y even if user had locked it
 }
 document.getElementById('chart-zoom-in').addEventListener('click', () => chartZoom('in'));
 document.getElementById('chart-zoom-out').addEventListener('click', () => chartZoom('out'));
@@ -2613,19 +2622,23 @@ function goToNextSession() {
   window.location.reload();
 }
 
-// TWS-style: ANY time-scale change (wheel zoom, pan, programmatic) should
-// trigger a Y-axis refit so the price range follows the visible bars in steps.
-// `applyOptions({autoScale: true})` doesn't refit if autoScale was already
-// true (no state change). The reliable trick: flip scaleMargins by a tiny
-// epsilon then back -- lightweight-charts recomputes the price range on
-// any margin change, which pulls the visible-bar autoscale through.
+// TWS-style Y-axis behavior:
+//   - Time-scale changes (pan, zoom) refit Y to the visible bars
+//   - BUT if the user has manually dragged the price axis to set their own
+//     range, respect that. Lightweight-charts sets autoScale=false internally
+//     on user price-axis drag; we read that flag and skip the refit.
+//   - Explicit user actions (RECENTER button, NEXT session) can pass force=true
+//     to re-enable autoScale.
 const _BASE_SCALE_MARGINS = { top: 0.1, bottom: 0.1 };
 let _autoRescaling = false;
 let _epsilonFlip = false;
-function rescaleY() {
+function rescaleY(force) {
   if (_autoRescaling) return;          // re-entrancy guard
-  _autoRescaling = true;
   const ps = chart.priceScale('right');
+  // If user manually adjusted the Y axis (autoScale = false), don't override
+  // unless this is an explicit force (e.g. recenter button).
+  if (!force && ps.options().autoScale === false) return;
+  _autoRescaling = true;
   ps.applyOptions({ autoScale: true });
   _epsilonFlip = !_epsilonFlip;
   const eps = _epsilonFlip ? 0.0001 : 0;
@@ -2657,7 +2670,7 @@ chartEl.addEventListener('wheel', () => {
         from: lastEdge - width, to: lastEdge,
       });
     }
-    rescaleY();    // TWS behavior: wheel zoom also rescales Y-axis
+    rescaleY(true);    // TWS behavior: wheel zoom is explicit, refit Y
     updateOverlay(); updatePositionGradient();
   }, 30);
 }, { passive: true });
@@ -2801,17 +2814,21 @@ renderAllTimeStats();
 renderDayLog();
 // No pre-roll: chart loads in "pre-market" state (prev bars visible,
 // clock at --:--:--). First STEP click reveals the first tick.
-// Initial view: right-anchored window with RIGHT_OFFSET breathing room.
+// Initial view: just the tail of the prev session for gap reference.
+// Fewer prev bars => tighter Y-axis on intraday range => today's first
+// candle is visible cleanly on gap days (otherwise yesterday's range
+// dominates and today's candle gets squished against the top).
+// User can pan/swipe left to see more prev history.
 setTimeout(() => {
   const data = candleSeries.data() || [];
   if (data.length > 0) {
-    const visible = Math.min(data.length, 25);
+    const visible = Math.min(data.length, 6);
     const lastEdge = data.length - 0.5 + RIGHT_OFFSET;
     chart.timeScale().setVisibleLogicalRange({
       from: lastEdge - visible,
       to: lastEdge,
     });
-    rescaleY();
+    rescaleY(true);
   }
 }, 100);
 </script>
