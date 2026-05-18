@@ -2317,7 +2317,7 @@ function openPosition(side, stopPct) {
     position: side === 'long' ? 'belowBar' : 'aboveBar',
     color: side === 'long' ? '#4ade80' : '#f87171',
     shape: side === 'long' ? 'arrowUp' : 'arrowDown',
-    text: side === 'long' ? 'BUY' : 'SELL',
+    size: 1,
   });
   candleSeries.setMarkers(markers);
   if (activePriceLine) candleSeries.removePriceLine(activePriceLine);
@@ -2377,7 +2377,7 @@ function closePosition() {
            '  -> ' + pnlStr + ' (' + pnlCadStr + ')' +
            '  [comm $' + commission.toFixed(2) + ']');
   markers.push({
-    time: bar.time, position: 'inBar', color: '#f6c143', shape: 'circle', text: 'X',
+    time: bar.time, position: 'inBar', color: '#888', shape: 'circle', size: 1,
   });
   candleSeries.setMarkers(markers);
   if (activePriceLine) { candleSeries.removePriceLine(activePriceLine); activePriceLine = null; }
