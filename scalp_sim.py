@@ -2813,15 +2813,12 @@ renderAllTimeStats();
 renderDayLog();
 // No pre-roll: chart loads in "pre-market" state (prev bars visible,
 // clock at --:--:--). First STEP click reveals the first tick.
-// Initial view: just the tail of the prev session for gap reference.
-// Fewer prev bars => tighter Y-axis on intraday range => today's first
-// candle is visible cleanly on gap days (otherwise yesterday's range
-// dominates and today's candle gets squished against the top).
-// User can pan/swipe left to see more prev history.
+// Initial view: ~25 bars of prev session for context. If Y range feels
+// wrong on gap days, user can drag the price axis to lock their own range.
 setTimeout(() => {
   const data = candleSeries.data() || [];
   if (data.length > 0) {
-    const visible = Math.min(data.length, 6);
+    const visible = Math.min(data.length, 25);
     const lastEdge = data.length - 0.5 + RIGHT_OFFSET;
     chart.timeScale().setVisibleLogicalRange({
       from: lastEdge - visible,
