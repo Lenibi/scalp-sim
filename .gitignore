@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[codz]
+
+# Data CSVs (big, sourced from sibling scheduled_trading repo)
+*.csv
+
+# Local generated artifacts (the published one is checked in explicitly)
+sim_*.html
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+venv/
+.venv/
