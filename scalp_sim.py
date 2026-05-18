@@ -1744,10 +1744,9 @@ const candleSeries = chart.addCandlestickSeries({
   lastValueVisible: true,
 });
 
-// rightOffset > 0 keeps the live candle off the right axis (so the price
-// label box has breathing room on mobile). shiftVisibleRangeOnNewBar
-// auto-scrolls left as new bars arrive.
-const RIGHT_OFFSET = 4;
+// rightOffset 0 = live candle flush against the right axis (no gap).
+// shiftVisibleRangeOnNewBar auto-scrolls left as new bars arrive.
+const RIGHT_OFFSET = 0;
 chart.timeScale().applyOptions({ rightOffset: RIGHT_OFFSET, shiftVisibleRangeOnNewBar: true });
 candleSeries.setData(PREV_BARS);
 function anchorRight() {
