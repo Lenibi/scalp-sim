@@ -2722,18 +2722,28 @@ function stepN(seconds) {
 // STEP = one tick (smallest unit). 1m/5m = multi-tick jumps.
 // Press-and-hold any of these for >= 1 second to enter repeat mode (acts
 // like holding the Space bar). Tap = single fire.
+//
+// setPointerCapture is the key: it locks pointer events to the button so
+// the repeat keeps firing even if the finger drifts slightly off the button
+// bounds. Without it, pointerleave would stop the repeat prematurely.
 function attachHoldRepeat(btn, fireFn, initialDelay = 1000, interval = 110) {
   let holdTimer = null;
   let repeatTimer = null;
   let suppressClick = false;
+  let activePointerId = null;
   function start(e) {
+    if (activePointerId !== null) return;   // already holding from another finger
+    activePointerId = e.pointerId;
+    try { btn.setPointerCapture(e.pointerId); } catch (err) {}
     suppressClick = true;
     fireFn();    // immediate single fire on press
     holdTimer = setTimeout(() => {
       repeatTimer = setInterval(fireFn, interval);
     }, initialDelay);
   }
-  function stop() {
+  function stop(e) {
+    if (e && activePointerId !== null && e.pointerId !== activePointerId) return;
+    activePointerId = null;
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = null; }
     // Let the synthetic click that may follow pointerup be swallowed first.
@@ -2742,7 +2752,8 @@ function attachHoldRepeat(btn, fireFn, initialDelay = 1000, interval = 110) {
   btn.addEventListener('pointerdown', start);
   btn.addEventListener('pointerup', stop);
   btn.addEventListener('pointercancel', stop);
-  btn.addEventListener('pointerleave', stop);
+  // No pointerleave -- with setPointerCapture, the button keeps receiving
+  // events until real pointerup/cancel, regardless of finger drift.
   // Block the synthetic click after touch so we don't double-fire.
   btn.addEventListener('click', e => {
     if (suppressClick) { e.preventDefault(); e.stopPropagation(); }
