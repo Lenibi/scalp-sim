@@ -530,8 +530,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     #chart-title-bar { height: 34px; gap: 4px; padding: 0 6px; }
     #ticker-header { top: 34px; height: 18px; font-size: 11px; gap: 6px; padding: 0 6px; }
     #session-progress { top: 52px; height: 5px; }
-    #ctrl-time { font-size: 16px !important; padding: 0 4px !important; letter-spacing: 0 !important; }
-    #ctb-account { font-size: 14px !important; padding: 0 4px !important; }
+    #ctrl-time { font-size: 16px !important; padding: 0 4px !important; letter-spacing: 0 !important; white-space: nowrap; }
+    #ctb-account { font-size: 14px !important; padding: 0 4px !important; white-space: nowrap; }
     .day-divider { top: 34px; }
     /* Keep +/- zoom in the chart title bar -- shrink them a touch on mobile. */
     #chart-zoom-in, #chart-zoom-out { width: 26px !important; height: 26px !important; font-size: 14px !important; }
