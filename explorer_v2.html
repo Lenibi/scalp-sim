@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scalp Sim v2 -- 5-sec 24/7</title>
+<script src="lightweight-charts.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #1a1a1a; color: #ddd;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #app { display: flex; flex-direction: column; height: 100vh; }
+  #topbar {
+    display: flex; gap: 8px; padding: 8px 10px; align-items: center;
+    background: #222; border-bottom: 1px solid #333; flex-wrap: wrap;
+  }
+  #topbar label { font-size: 13px; color: #888; }
+  select, button.btn {
+    background: #2a2a2a; color: #ddd; border: 1px solid #444;
+    padding: 6px 10px; border-radius: 4px; font-size: 14px;
+    cursor: pointer; font-family: inherit;
+  }
+  select:hover, button.btn:hover { background: #333; }
+  .nav-btn { font-weight: 700; font-size: 16px; min-width: 32px; }
+  #chart-wrap { flex: 1; position: relative; min-height: 0; }
+  #chart { width: 100%; height: 100%; }
+  #status {
+    font-size: 12px; color: #888; padding: 6px 10px;
+    background: #1d1d1d; border-bottom: 1px solid #333;
+  }
+  #actions {
+    display: flex; gap: 6px; padding: 10px;
+    background: #222; border-top: 1px solid #333; flex-wrap: wrap;
+  }
+  button.action {
+    flex: 1; min-width: 80px; padding: 12px 8px; border-radius: 6px;
+    font-weight: 700; font-size: 13px; border: none; cursor: pointer;
+    font-family: inherit;
+  }
+  .buy   { background: #1f7a4d; color: white; }
+  .short { background: #b03030; color: white; }
+  .close { background: #f6c143; color: #1a1500; }
+  .be    { background: #2f4858; color: white; }
+  .be.active { background: #4a8aa6; color: white; box-shadow: inset 0 0 0 2px #88ddff; }
+  .reset { background: #444; color: white; }
+  #info {
+    font-size: 12px; padding: 6px 10px; color: #aaa;
+    background: #1d1d1d; min-height: 32px;
+  }
+  #info .label { color: #fff; font-weight: 600; }
+  .pos-long  { color: #4fd17a; }
+  .pos-short { color: #f76b6b; }
+  .pnl-pos { color: #4fd17a; }
+  .pnl-neg { color: #f76b6b; }
+  @media (max-width: 700px) {
+    select, button.btn { font-size: 13px; }
+    button.action { font-size: 12px; padding: 10px 6px; }
+    #topbar { padding: 6px; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <label>Ticker:</label>
+    <select id="ticker-select"></select>
+    <button class="btn nav-btn" id="week-prev" title="Previous week">&laquo;</button>
+    <select id="week-select" style="min-width:180px"></select>
+    <button class="btn nav-btn" id="week-next" title="Next week">&raquo;</button>
+    <span style="flex:1"></span>
+    <button class="btn" id="jump-end" title="Jump to end">End</button>
+    <button class="btn" id="jump-start" title="Jump to start">Start</button>
+  </div>
+  <div id="status">Loading catalog...</div>
+  <div id="chart-wrap"><div id="chart"></div></div>
+  <div id="info">Click a bar to set the playhead cursor. Breakeven anchors to that bar.</div>
+  <div id="actions">
+    <button class="action buy"   id="btn-buy">BUY (long)</button>
+    <button class="action short" id="btn-short">SHORT</button>
+    <button class="action close" id="btn-close">CLOSE</button>
+    <button class="action be"    id="btn-be">BE</button>
+    <button class="action reset" id="btn-reset">Reset</button>
+  </div>
+</div>
+
+<script>
+// ---------- Config ----------
+const ROUND_TRIP_COST_PCT = 0.04;  // 0.04% = 4 bps (round-trip).
+const DATA_BASE = 'data/';
+
+// ---------- State ----------
+let catalog = null;
+let currentTicker = null;
+let currentWeek = null;
+let bars = [];
+let chart = null;
+let candleSeries = null;
+let currentBarIndex = null;
+let beVisible = false;
+let beUpLine = null;
+let beDownLine = null;
+let position = null;
+let positionLines = { entry: null, breakeven: null };
+
+// ---------- DOM ----------
+const $ticker = document.getElementById('ticker-select');
+const $week = document.getElementById('week-select');
+const $weekPrev = document.getElementById('week-prev');
+const $weekNext = document.getElementById('week-next');
+const $jumpEnd = document.getElementById('jump-end');
+const $jumpStart = document.getElementById('jump-start');
+const $status = document.getElementById('status');
+const $info = document.getElementById('info');
+const $btnBuy = document.getElementById('btn-buy');
+const $btnShort = document.getElementById('btn-short');
+const $btnClose = document.getElementById('btn-close');
+const $btnBE = document.getElementById('btn-be');
+const $btnReset = document.getElementById('btn-reset');
+
+// ---------- Safe DOM helpers ----------
+function el(tag, opts = {}, ...kids) {
+  const n = document.createElement(tag);
+  if (opts.cls) n.className = opts.cls;
+  if (opts.text != null) n.textContent = opts.text;
+  if (opts.title) n.title = opts.title;
+  for (const k of kids) {
+    if (k == null) continue;
+    n.appendChild(typeof k === 'string' ? document.createTextNode(k) : k);
+  }
+  return n;
+}
+function clearChildren(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+// ---------- Chart setup ----------
+function initChart() {
+  if (chart) { chart.remove(); chart = null; }
+  const container = document.getElementById('chart');
+  chart = LightweightCharts.createChart(container, {
+    layout: { background: { color: '#1a1a1a' }, textColor: '#cccccc' },
+    grid: { vertLines: { color: '#252525' }, horzLines: { color: '#252525' } },
+    timeScale: {
+      timeVisible: true, secondsVisible: true,
+      borderColor: '#444',
+      tickMarkFormatter: (time) => {
+        const d = new Date(time * 1000);
+        const opts = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York' };
+        const weekday = d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/New_York' });
+        const hm = d.toLocaleString('en-US', opts);
+        return weekday + ' ' + hm;
+      },
+    },
+    rightPriceScale: { borderColor: '#444' },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  });
+  candleSeries = chart.addCandlestickSeries({
+    upColor: '#4fd17a', downColor: '#f76b6b',
+    borderUpColor: '#4fd17a', borderDownColor: '#f76b6b',
+    wickUpColor: '#4fd17a', wickDownColor: '#f76b6b',
+  });
+  chart.subscribeClick(param => {
+    if (!param.time || !bars.length) return;
+    const idx = bars.findIndex(b => b.t === param.time);
+    if (idx >= 0) setPlayhead(idx);
+  });
+}
+
+window.addEventListener('resize', () => { if (chart) chart.applyOptions({}); });
+
+// ---------- Catalog & week loading ----------
+async function loadCatalog() {
+  try {
+    const resp = await fetch(DATA_BASE + 'catalog.json');
+    catalog = await resp.json();
+    clearChildren($ticker);
+    catalog.tickers.forEach(t => $ticker.appendChild(el('option', { text: t })));
+    $ticker.querySelectorAll('option').forEach((o, i) => { o.value = catalog.tickers[i]; });
+    currentTicker = catalog.tickers[0];
+    populateWeeks();
+    if ($week.options.length > 0) {
+      currentWeek = $week.options[$week.options.length - 1].value;
+      $week.value = currentWeek;
+      await loadWeek();
+    }
+  } catch (e) {
+    $status.textContent = 'Failed to load catalog.json: ' + e.message;
+  }
+}
+
+function populateWeeks() {
+  clearChildren($week);
+  const weeksForTicker = catalog.entries.filter(e => e.ticker === currentTicker).map(e => e.week_start);
+  weeksForTicker.forEach(w => {
+    const opt = el('option', { text: 'Week of ' + w });
+    opt.value = w;
+    $week.appendChild(opt);
+  });
+}
+
+async function loadWeek() {
+  $status.textContent = 'Loading ' + currentTicker + ' week ' + currentWeek + '...';
+  clearPosition();
+  hideBreakeven();
+  try {
+    const resp = await fetch(DATA_BASE + currentTicker + '_week_' + currentWeek + '.json');
+    bars = await resp.json();
+    candleSeries.setData(bars.map(b => ({
+      time: b.t, open: b.o, high: b.h, low: b.l, close: b.c,
+    })));
+    chart.timeScale().fitContent();
+    currentBarIndex = bars.length - 1;
+    $status.textContent = currentTicker + ' week ' + currentWeek + ': ' + bars.length.toLocaleString() + ' bars';
+    updateInfo();
+  } catch (e) {
+    $status.textContent = 'Failed to load week ' + currentWeek + ': ' + e.message;
+  }
+}
+
+// ---------- Playhead ----------
+function setPlayhead(idx) {
+  if (idx < 0 || idx >= bars.length) return;
+  currentBarIndex = idx;
+  if (beVisible) updateBreakevenLines();
+  updateInfo();
+}
+
+function currentPrice() {
+  if (currentBarIndex == null || !bars[currentBarIndex]) return null;
+  return bars[currentBarIndex].c;
+}
+
+// ---------- Breakeven ----------
+function showBreakeven() {
+  if (currentPrice() == null) return;
+  beVisible = true;
+  $btnBE.classList.add('active');
+  updateBreakevenLines();
+}
+function hideBreakeven() {
+  beVisible = false;
+  $btnBE.classList.remove('active');
+  if (beUpLine) { candleSeries.removePriceLine(beUpLine); beUpLine = null; }
+  if (beDownLine) { candleSeries.removePriceLine(beDownLine); beDownLine = null; }
+}
+function updateBreakevenLines() {
+  if (!beVisible) return;
+  const p = currentPrice();
+  if (p == null) return;
+  const half = ROUND_TRIP_COST_PCT / 2 / 100;
+  const upLevel = p * (1 + half);
+  const dnLevel = p * (1 - half);
+  if (beUpLine) candleSeries.removePriceLine(beUpLine);
+  if (beDownLine) candleSeries.removePriceLine(beDownLine);
+  beUpLine = candleSeries.createPriceLine({
+    price: upLevel, color: '#4fd17a', lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    axisLabelVisible: true,
+    title: 'BE long ' + upLevel.toFixed(2),
+  });
+  beDownLine = candleSeries.createPriceLine({
+    price: dnLevel, color: '#f76b6b', lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    axisLabelVisible: true,
+    title: 'BE short ' + dnLevel.toFixed(2),
+  });
+}
+
+// ---------- Position ----------
+function openPosition(side) {
+  if (position) return;
+  const p = currentPrice();
+  if (p == null) return;
+  position = { side, entryPrice: p, entryIndex: currentBarIndex };
+  drawPositionLines();
+  updateInfo();
+}
+function closePosition() {
+  if (!position) return;
+  const p = currentPrice();
+  if (p == null) return;
+  const gross = position.side === 'long' ? (p - position.entryPrice) : (position.entryPrice - p);
+  const grossPct = gross / position.entryPrice * 100;
+  const netPct = grossPct - ROUND_TRIP_COST_PCT;
+  const sideLabel = position.side === 'long' ? 'LONG' : 'SHORT';
+  alert(sideLabel + ' closed.\nEntry: $' + position.entryPrice.toFixed(2) +
+        '\nExit: $' + p.toFixed(2) +
+        '\nGross: ' + (grossPct>=0?'+':'') + grossPct.toFixed(3) + '%' +
+        '\nAfter cost: ' + (netPct>=0?'+':'') + netPct.toFixed(3) + '%');
+  clearPosition();
+}
+function clearPosition() {
+  position = null;
+  for (const k of Object.keys(positionLines)) {
+    if (positionLines[k]) { candleSeries.removePriceLine(positionLines[k]); positionLines[k] = null; }
+  }
+  updateInfo();
+}
+function drawPositionLines() {
+  if (!position) return;
+  const entryColor = position.side === 'long' ? '#4fd17a' : '#f76b6b';
+  positionLines.entry = candleSeries.createPriceLine({
+    price: position.entryPrice, color: entryColor, lineWidth: 2,
+    lineStyle: LightweightCharts.LineStyle.Solid,
+    axisLabelVisible: true,
+    title: position.side.toUpperCase() + ' entry $' + position.entryPrice.toFixed(2),
+  });
+  const beLevel = position.side === 'long'
+    ? position.entryPrice * (1 + ROUND_TRIP_COST_PCT/100)
+    : position.entryPrice * (1 - ROUND_TRIP_COST_PCT/100);
+  positionLines.breakeven = candleSeries.createPriceLine({
+    price: beLevel, color: '#cccccc', lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dotted,
+    axisLabelVisible: true,
+    title: 'BE $' + beLevel.toFixed(2),
+  });
+}
+
+function updateInfo() {
+  clearChildren($info);
+  if (currentBarIndex != null && bars[currentBarIndex]) {
+    const b = bars[currentBarIndex];
+    const dt = new Date(b.t * 1000);
+    const dtStr = dt.toLocaleString('en-US', { timeZone: 'America/New_York', hour12: false });
+    $info.appendChild(el('span', { cls: 'label', text: dtStr + ' ET  ' }));
+    $info.appendChild(el('span', { text: 'O ' + b.o.toFixed(2) + ' / H ' + b.h.toFixed(2) + ' / L ' + b.l.toFixed(2) + ' / C ' + b.c.toFixed(2) }));
+  }
+  if (position) {
+    const p = currentPrice();
+    const gross = position.side === 'long' ? (p - position.entryPrice) : (position.entryPrice - p);
+    const grossPct = gross / position.entryPrice * 100;
+    const cls = grossPct >= 0 ? 'pnl-pos' : 'pnl-neg';
+    const sideClass = position.side === 'long' ? 'pos-long' : 'pos-short';
+    $info.appendChild(document.createTextNode('  ·  '));
+    $info.appendChild(el('span', { cls: sideClass, text: position.side.toUpperCase() }));
+    $info.appendChild(document.createTextNode(' @ $' + position.entryPrice.toFixed(2) + '  P&L '));
+    $info.appendChild(el('span', { cls, text: (grossPct>=0?'+':'') + grossPct.toFixed(3) + '%' }));
+    $info.appendChild(document.createTextNode('  (after cost ' + (grossPct - ROUND_TRIP_COST_PCT).toFixed(3) + '%)'));
+  }
+  if (!currentBarIndex && !position) {
+    $info.appendChild(document.createTextNode('Click a bar to set the playhead cursor.'));
+  }
+}
+
+// ---------- Wiring ----------
+$ticker.addEventListener('change', () => {
+  currentTicker = $ticker.value;
+  populateWeeks();
+  if ($week.options.length > 0) {
+    currentWeek = $week.options[$week.options.length - 1].value;
+    $week.value = currentWeek;
+    loadWeek();
+  }
+});
+$week.addEventListener('change', () => { currentWeek = $week.value; loadWeek(); });
+$weekPrev.addEventListener('click', () => {
+  const idx = Array.from($week.options).findIndex(o => o.value === currentWeek);
+  if (idx > 0) { $week.value = $week.options[idx-1].value; currentWeek = $week.value; loadWeek(); }
+});
+$weekNext.addEventListener('click', () => {
+  const idx = Array.from($week.options).findIndex(o => o.value === currentWeek);
+  if (idx >= 0 && idx < $week.options.length - 1) { $week.value = $week.options[idx+1].value; currentWeek = $week.value; loadWeek(); }
+});
+$jumpEnd.addEventListener('click', () => { if (bars.length) setPlayhead(bars.length - 1); });
+$jumpStart.addEventListener('click', () => { if (bars.length) setPlayhead(0); });
+$btnBuy.addEventListener('click', () => openPosition('long'));
+$btnShort.addEventListener('click', () => openPosition('short'));
+$btnClose.addEventListener('click', closePosition);
+$btnReset.addEventListener('click', () => { clearPosition(); hideBreakeven(); });
+$btnBE.addEventListener('click', () => { if (beVisible) hideBreakeven(); else showBreakeven(); });
+
+// ---------- Init ----------
+initChart();
+loadCatalog();
+</script>
+</body>
+</html>
