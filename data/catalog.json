@@ -1,0 +1,130 @@
+{
+  "tickers": [
+    "SOXL",
+    "MSTR"
+  ],
+  "weeks": [
+    "2025-12-29",
+    "2026-01-05",
+    "2026-01-12",
+    "2026-01-19",
+    "2026-01-26",
+    "2026-02-02",
+    "2026-02-09",
+    "2026-02-16",
+    "2026-02-23",
+    "2026-03-02"
+  ],
+  "entries": [
+    {
+      "ticker": "SOXL",
+      "week_start": "2025-12-29",
+      "file": "SOXL_week_2025-12-29.json",
+      "n_bars": 17280,
+      "first_ts": 1767170400,
+      "last_ts": 1767401995,
+      "first_dt_utc": "2025-12-31 08:40",
+      "last_dt_utc": "2026-01-03 00:59",
+      "size_kb": 1083.6
+    },
+    {
+      "ticker": "SOXL",
+      "week_start": "2026-01-05",
+      "file": "SOXL_week_2026-01-05.json",
+      "n_bars": 80268,
+      "first_ts": 1767602400,
+      "last_ts": 1768006795,
+      "first_dt_utc": "2026-01-05 08:40",
+      "last_dt_utc": "2026-01-10 00:59",
+      "size_kb": 5032.2
+    },
+    {
+      "ticker": "SOXL",
+      "week_start": "2026-01-12",
+      "file": "SOXL_week_2026-01-12.json",
+      "n_bars": 80265,
+      "first_ts": 1768207200,
+      "last_ts": 1768611595,
+      "first_dt_utc": "2026-01-12 08:40",
+      "last_dt_utc": "2026-01-17 00:59",
+      "size_kb": 5023.1
+    },
+    {
+      "ticker": "SOXL",
+      "week_start": "2026-01-19",
+      "file": "SOXL_week_2026-01-19.json",
+      "n_bars": 63117,
+      "first_ts": 1768898400,
+      "last_ts": 1769216395,
+      "first_dt_utc": "2026-01-20 08:40",
+      "last_dt_utc": "2026-01-24 00:59",
+      "size_kb": 3956.9
+    },
+    {
+      "ticker": "SOXL",
+      "week_start": "2026-01-26",
+      "file": "SOXL_week_2026-01-26.json",
+      "n_bars": 80277,
+      "first_ts": 1769416800,
+      "last_ts": 1769821195,
+      "first_dt_utc": "2026-01-26 08:40",
+      "last_dt_utc": "2026-01-31 00:59",
+      "size_kb": 5035.7
+    },
+    {
+      "ticker": "SOXL",
+      "week_start": "2026-02-02",
+      "file": "SOXL_week_2026-02-02.json",
+      "n_bars": 80274,
+      "first_ts": 1770021600,
+      "last_ts": 1770425995,
+      "first_dt_utc": "2026-02-02 08:40",
+      "last_dt_utc": "2026-02-07 00:59",
+      "size_kb": 5046.8
+    },
+    {
+      "ticker": "SOXL",
+      "week_start": "2026-02-09",
+      "file": "SOXL_week_2026-02-09.json",
+      "n_bars": 80273,
+      "first_ts": 1770626400,
+      "last_ts": 1771030795,
+      "first_dt_utc": "2026-02-09 08:40",
+      "last_dt_utc": "2026-02-14 00:59",
+      "size_kb": 5025.1
+    },
+    {
+      "ticker": "SOXL",
+      "week_start": "2026-02-16",
+      "file": "SOXL_week_2026-02-16.json",
+      "n_bars": 63110,
+      "first_ts": 1771317600,
+      "last_ts": 1771635595,
+      "first_dt_utc": "2026-02-17 08:40",
+      "last_dt_utc": "2026-02-21 00:59",
+      "size_kb": 3943.3
+    },
+    {
+      "ticker": "SOXL",
+      "week_start": "2026-02-23",
+      "file": "SOXL_week_2026-02-23.json",
+      "n_bars": 80275,
+      "first_ts": 1771836000,
+      "last_ts": 1772240395,
+      "first_dt_utc": "2026-02-23 08:40",
+      "last_dt_utc": "2026-02-28 00:59",
+      "size_kb": 5021.6
+    },
+    {
+      "ticker": "SOXL",
+      "week_start": "2026-03-02",
+      "file": "SOXL_week_2026-03-02.json",
+      "n_bars": 51594,
+      "first_ts": 1772440800,
+      "last_ts": 1772700595,
+      "first_dt_utc": "2026-03-02 08:40",
+      "last_dt_utc": "2026-03-05 08:49",
+      "size_kb": 3245.1
+    }
+  ]
+}
