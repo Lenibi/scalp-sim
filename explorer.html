@@ -1740,20 +1740,26 @@ function _computeVolumeData(bars) {
   return out;
 }
 function _computeVWAPAndBands(bars) {
-  // Returns { vwap: [...], upper: [...], lower: [...] }. Resets at 09:30 ET.
+  // RTH-only: matches TWS Intraday VWAP behavior.
+  // Line is HIDDEN outside 9:30 AM - 4:00 PM ET (no data points emitted).
+  // Accumulation also restricted to RTH bars (skips overnight thin volume).
+  // Resets at 9:30 AM each new ET date.
   const vwap = [], upper = [], lower = [];
   let cumN = 0, cumD = 0, cumP2v = 0, lastDay = null;
   for (const b of bars) {
     const d = new Date((b.time + (window._etOffsetForVWAP || 0)) * 1000);
-    const sessionKey = d.getUTCFullYear() + '-' + d.getUTCMonth() + '-' + d.getUTCDate() + (d.getUTCHours() < 9 || (d.getUTCHours() === 9 && d.getUTCMinutes() < 30) ? '_pre' : '');
+    const h = d.getUTCHours();
+    const m = d.getUTCMinutes();
+    const inRTH = (h > 9 || (h === 9 && m >= 30)) && h < 16;
+    const sessionKey = d.getUTCFullYear() + '-' + d.getUTCMonth() + '-' + d.getUTCDate();
     if (sessionKey !== lastDay) { cumN = 0; cumD = 0; cumP2v = 0; lastDay = sessionKey; }
-    if ((b.v || 0) > 0) {
+    if (inRTH && (b.v || 0) > 0) {
       const typical = (b.high + b.low + b.close) / 3;
       cumN += typical * b.v;
       cumD += b.v;
       cumP2v += typical * typical * b.v;
     }
-    if (cumD > 0) {
+    if (inRTH && cumD > 0) {
       const v = cumN / cumD;
       const variance = Math.max(0, cumP2v / cumD - v * v);
       const sigma = Math.sqrt(variance);
