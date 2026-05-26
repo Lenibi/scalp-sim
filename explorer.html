@@ -2219,8 +2219,49 @@ function updateUI() {
 // dynamically -- TWS-style live bar formation. Lightweight-charts handles
 // auto-scroll-on-new-bar natively via shiftVisibleRangeOnNewBar; we don't
 // need to manually scroll the visible range here.
+// Rolling 2-day window state (mutable wrapper around module-level consts)
+const ROLLING = { currentDate: DATE, prevDate: PREV_DATE };
+
+function _findNextSessionDate(ticker, afterDate) {
+  // Return the next available date in CATALOG for this ticker, after afterDate
+  const pool = CATALOG.filter(s => s.ticker === ticker).map(s => s.date).sort();
+  const idx = pool.indexOf(afterDate);
+  if (idx < 0 || idx === pool.length - 1) return null;
+  return pool[idx + 1];
+}
+
+function _transitionToNextDay() {
+  const nextDate = _findNextSessionDate(TICKER, ROLLING.currentDate);
+  if (!nextDate) return false;
+  _loadSessionBars(TICKER, nextDate);
+  const nextRawBars = BARS_BY_KEY[TICKER + '_' + nextDate] || [];
+  if (!nextRawBars.length) return false;
+  // Promote: current "today" becomes new "yesterday" PREV_BARS for the chart
+  // (use the expanded TODAY_TICKS aggregated to current bucket size)
+  const newPrevAggregated = aggregateBars(TODAY_TICKS, CANDLE_BUCKET_SECONDS);
+  // Replace TODAY_TICKS contents in-place
+  TODAY_TICKS.length = 0;
+  const expanded = expandBars(nextRawBars);
+  for (const b of expanded) TODAY_TICKS.push(b);
+  // Reset cursor for new day
+  tickIdx = 0;
+  liveCandle = null;
+  // Update PREV_BARS to show new yesterday (last 24h of current day)
+  PREV_BARS.length = 0;
+  for (const b of newPrevAggregated.slice(-1440)) PREV_BARS.push(b);
+  candleSeries.setData(PREV_BARS);
+  // Update rolling state
+  ROLLING.prevDate = ROLLING.currentDate;
+  ROLLING.currentDate = nextDate;
+  return true;
+}
+
 function advance() {
-  if (tickIdx >= TODAY_TICKS.length) { pause(); return; }
+  if (tickIdx >= TODAY_TICKS.length) {
+    // Auto-roll: load next day, shift "today" into "yesterday" position
+    const ok = _transitionToNextDay();
+    if (!ok) { pause(); return; }
+  }
   const tick = TODAY_TICKS[tickIdx];
   const isLastTick = (tickIdx === TODAY_TICKS.length - 1);
   const bucket = Math.floor(tick.time / CANDLE_BUCKET_SECONDS) * CANDLE_BUCKET_SECONDS;

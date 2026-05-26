@@ -1,1802 +1,2066 @@
 [
   {
     "ticker": "MSTR",
-    "date": "2025-12-29",
-    "prev_date": "2025-12-26",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2025-12-29"
-  },
-  {
-    "ticker": "MSTR",
-    "date": "2025-12-30",
-    "prev_date": "2025-12-29",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2025-12-29"
-  },
-  {
-    "ticker": "MSTR",
     "date": "2025-12-31",
-    "prev_date": "2025-12-30",
+    "prev_date": null,
     "context_dates": [],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2025-12-29"
-  },
-  {
-    "ticker": "MSTR",
-    "date": "2026-01-01",
-    "prev_date": "2025-12-31",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2025-12-29"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-02",
-    "prev_date": "2026-01-01",
-    "context_dates": [],
+    "prev_date": "2025-12-31",
+    "context_dates": [
+      "2025-12-31"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2025-12-29"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-05",
     "prev_date": "2026-01-02",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-02"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-06",
     "prev_date": "2026-01-05",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-05"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-07",
     "prev_date": "2026-01-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-08",
     "prev_date": "2026-01-07",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-07"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-09",
     "prev_date": "2026-01-08",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-08"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-12",
     "prev_date": "2026-01-09",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-09"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-13",
     "prev_date": "2026-01-12",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-12"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-14",
     "prev_date": "2026-01-13",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-15",
     "prev_date": "2026-01-14",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-14"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-16",
     "prev_date": "2026-01-15",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-15"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
-  },
-  {
-    "ticker": "MSTR",
-    "date": "2026-01-19",
-    "prev_date": "2026-01-16",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-20",
-    "prev_date": "2026-01-19",
-    "context_dates": [],
+    "prev_date": "2026-01-16",
+    "context_dates": [
+      "2026-01-16"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-21",
     "prev_date": "2026-01-20",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-20"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-22",
     "prev_date": "2026-01-21",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-21"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-23",
     "prev_date": "2026-01-22",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-22"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-26",
     "prev_date": "2026-01-23",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-23"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-27",
     "prev_date": "2026-01-26",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-26"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-28",
     "prev_date": "2026-01-27",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-27"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-29",
     "prev_date": "2026-01-28",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-28"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-01-30",
     "prev_date": "2026-01-29",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-29"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-02",
     "prev_date": "2026-01-30",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-30"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-03",
     "prev_date": "2026-02-02",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-02"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-04",
     "prev_date": "2026-02-03",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-03"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-05",
     "prev_date": "2026-02-04",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-04"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-06",
     "prev_date": "2026-02-05",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-05"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-09",
     "prev_date": "2026-02-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-10",
     "prev_date": "2026-02-09",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-09"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-11",
     "prev_date": "2026-02-10",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-10"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-12",
     "prev_date": "2026-02-11",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-11"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-13",
     "prev_date": "2026-02-12",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-12"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
-  },
-  {
-    "ticker": "MSTR",
-    "date": "2026-02-16",
-    "prev_date": "2026-02-13",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-17",
-    "prev_date": "2026-02-16",
-    "context_dates": [],
+    "prev_date": "2026-02-13",
+    "context_dates": [
+      "2026-02-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-18",
     "prev_date": "2026-02-17",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-17"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-19",
     "prev_date": "2026-02-18",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-18"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-20",
     "prev_date": "2026-02-19",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-19"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-23",
     "prev_date": "2026-02-20",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-20"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-24",
     "prev_date": "2026-02-23",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-23"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-25",
     "prev_date": "2026-02-24",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-24"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-26",
     "prev_date": "2026-02-25",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-25"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-02-27",
     "prev_date": "2026-02-26",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-26"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-02",
     "prev_date": "2026-02-27",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-27"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-03",
     "prev_date": "2026-03-02",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-02"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-04",
     "prev_date": "2026-03-03",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-03"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-05",
     "prev_date": "2026-03-04",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-04"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-06",
     "prev_date": "2026-03-05",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-05"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-09",
     "prev_date": "2026-03-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-10",
     "prev_date": "2026-03-09",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-09"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-11",
     "prev_date": "2026-03-10",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-10"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-12",
     "prev_date": "2026-03-11",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-11"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-13",
     "prev_date": "2026-03-12",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-12"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-16",
     "prev_date": "2026-03-13",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-17",
     "prev_date": "2026-03-16",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-16"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-18",
     "prev_date": "2026-03-17",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-17"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-19",
     "prev_date": "2026-03-18",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-18"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-20",
     "prev_date": "2026-03-19",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-19"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-23",
     "prev_date": "2026-03-20",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-20"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-24",
     "prev_date": "2026-03-23",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-23"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-25",
     "prev_date": "2026-03-24",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-24"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-26",
     "prev_date": "2026-03-25",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-25"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-27",
     "prev_date": "2026-03-26",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-26"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-30",
     "prev_date": "2026-03-27",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-27"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-30"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-03-31",
     "prev_date": "2026-03-30",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-30"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-30"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-01",
     "prev_date": "2026-03-31",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-31"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-30"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-02",
     "prev_date": "2026-04-01",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-01"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-30"
-  },
-  {
-    "ticker": "MSTR",
-    "date": "2026-04-03",
-    "prev_date": "2026-04-02",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2026-03-30"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-06",
-    "prev_date": "2026-04-03",
-    "context_dates": [],
+    "prev_date": "2026-04-02",
+    "context_dates": [
+      "2026-04-02"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-07",
     "prev_date": "2026-04-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-08",
     "prev_date": "2026-04-07",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-07"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-09",
     "prev_date": "2026-04-08",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-08"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-10",
     "prev_date": "2026-04-09",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-09"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-13",
     "prev_date": "2026-04-10",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-10"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-14",
     "prev_date": "2026-04-13",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-15",
     "prev_date": "2026-04-14",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-14"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-16",
     "prev_date": "2026-04-15",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-15"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-17",
     "prev_date": "2026-04-16",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-16"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-20",
     "prev_date": "2026-04-17",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-17"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-21",
     "prev_date": "2026-04-20",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-20"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-22",
     "prev_date": "2026-04-21",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-21"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-23",
     "prev_date": "2026-04-22",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-22"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-24",
     "prev_date": "2026-04-23",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-23"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-27",
     "prev_date": "2026-04-24",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-24"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-28",
     "prev_date": "2026-04-27",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-27"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-29",
     "prev_date": "2026-04-28",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-28"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-04-30",
     "prev_date": "2026-04-29",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-29"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-01",
     "prev_date": "2026-04-30",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-30"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-04",
     "prev_date": "2026-05-01",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-01"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-05",
     "prev_date": "2026-05-04",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-04"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-06",
     "prev_date": "2026-05-05",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-05"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-07",
     "prev_date": "2026-05-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-08",
     "prev_date": "2026-05-07",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-07"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-11",
     "prev_date": "2026-05-08",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-08"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-12",
     "prev_date": "2026-05-11",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-11"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-13",
     "prev_date": "2026-05-12",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-12"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-14",
     "prev_date": "2026-05-13",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
+    "week": null
   },
   {
     "ticker": "MSTR",
     "date": "2026-05-15",
     "prev_date": "2026-05-14",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-14"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
-  },
-  {
-    "ticker": "SOXL",
-    "date": "2025-12-29",
-    "prev_date": "2025-12-26",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2025-12-29"
-  },
-  {
-    "ticker": "SOXL",
-    "date": "2025-12-30",
-    "prev_date": "2025-12-29",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2025-12-29"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2025-12-31",
-    "prev_date": "2025-12-30",
+    "prev_date": null,
     "context_dates": [],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2025-12-29"
-  },
-  {
-    "ticker": "SOXL",
-    "date": "2026-01-01",
-    "prev_date": "2025-12-31",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2025-12-29"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-02",
-    "prev_date": "2026-01-01",
-    "context_dates": [],
+    "prev_date": "2025-12-31",
+    "context_dates": [
+      "2025-12-31"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2025-12-29"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-05",
     "prev_date": "2026-01-02",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-02"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-06",
     "prev_date": "2026-01-05",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-05"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-07",
     "prev_date": "2026-01-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-08",
     "prev_date": "2026-01-07",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-07"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-09",
     "prev_date": "2026-01-08",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-08"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-05"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-12",
     "prev_date": "2026-01-09",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-09"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-13",
     "prev_date": "2026-01-12",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-12"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-14",
     "prev_date": "2026-01-13",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-15",
     "prev_date": "2026-01-14",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-14"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-16",
     "prev_date": "2026-01-15",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-15"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-12"
-  },
-  {
-    "ticker": "SOXL",
-    "date": "2026-01-19",
-    "prev_date": "2026-01-16",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-20",
-    "prev_date": "2026-01-19",
-    "context_dates": [],
+    "prev_date": "2026-01-16",
+    "context_dates": [
+      "2026-01-16"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-21",
     "prev_date": "2026-01-20",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-20"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-22",
     "prev_date": "2026-01-21",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-21"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-23",
     "prev_date": "2026-01-22",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-22"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-19"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-26",
     "prev_date": "2026-01-23",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-23"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-27",
     "prev_date": "2026-01-26",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-26"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-28",
     "prev_date": "2026-01-27",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-27"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-29",
     "prev_date": "2026-01-28",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-28"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-01-30",
     "prev_date": "2026-01-29",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-29"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-01-26"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-02",
     "prev_date": "2026-01-30",
-    "context_dates": [],
+    "context_dates": [
+      "2026-01-30"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-03",
     "prev_date": "2026-02-02",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-02"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-04",
     "prev_date": "2026-02-03",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-03"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-05",
     "prev_date": "2026-02-04",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-04"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-06",
     "prev_date": "2026-02-05",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-05"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-09",
     "prev_date": "2026-02-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-10",
     "prev_date": "2026-02-09",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-09"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-11",
     "prev_date": "2026-02-10",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-10"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-12",
     "prev_date": "2026-02-11",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-11"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-13",
     "prev_date": "2026-02-12",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-12"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-09"
-  },
-  {
-    "ticker": "SOXL",
-    "date": "2026-02-16",
-    "prev_date": "2026-02-13",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-17",
-    "prev_date": "2026-02-16",
-    "context_dates": [],
+    "prev_date": "2026-02-13",
+    "context_dates": [
+      "2026-02-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-18",
     "prev_date": "2026-02-17",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-17"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-19",
     "prev_date": "2026-02-18",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-18"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-20",
     "prev_date": "2026-02-19",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-19"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-23",
     "prev_date": "2026-02-20",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-20"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-24",
     "prev_date": "2026-02-23",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-23"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-25",
     "prev_date": "2026-02-24",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-24"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-26",
     "prev_date": "2026-02-25",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-25"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-02-27",
     "prev_date": "2026-02-26",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-26"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-02-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-02",
     "prev_date": "2026-02-27",
-    "context_dates": [],
+    "context_dates": [
+      "2026-02-27"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-03",
     "prev_date": "2026-03-02",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-02"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-04",
     "prev_date": "2026-03-03",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-03"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-05",
     "prev_date": "2026-03-04",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-04"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-06",
     "prev_date": "2026-03-05",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-05"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-02"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-09",
     "prev_date": "2026-03-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-10",
     "prev_date": "2026-03-09",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-09"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-11",
     "prev_date": "2026-03-10",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-10"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-12",
     "prev_date": "2026-03-11",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-11"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-13",
     "prev_date": "2026-03-12",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-12"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-09"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-16",
     "prev_date": "2026-03-13",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-17",
     "prev_date": "2026-03-16",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-16"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-18",
     "prev_date": "2026-03-17",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-17"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-19",
     "prev_date": "2026-03-18",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-18"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-20",
     "prev_date": "2026-03-19",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-19"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-16"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-23",
     "prev_date": "2026-03-20",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-20"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-24",
     "prev_date": "2026-03-23",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-23"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-25",
     "prev_date": "2026-03-24",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-24"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-26",
     "prev_date": "2026-03-25",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-25"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-27",
     "prev_date": "2026-03-26",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-26"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-23"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-30",
     "prev_date": "2026-03-27",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-27"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-30"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-03-31",
     "prev_date": "2026-03-30",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-30"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-30"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-01",
     "prev_date": "2026-03-31",
-    "context_dates": [],
+    "context_dates": [
+      "2026-03-31"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-30"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-02",
     "prev_date": "2026-04-01",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-01"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-03-30"
-  },
-  {
-    "ticker": "SOXL",
-    "date": "2026-04-03",
-    "prev_date": "2026-04-02",
-    "context_dates": [],
-    "has_5sec": true,
-    "prev_close": null,
-    "week": "2026-03-30"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-06",
-    "prev_date": "2026-04-03",
-    "context_dates": [],
+    "prev_date": "2026-04-02",
+    "context_dates": [
+      "2026-04-02"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-07",
     "prev_date": "2026-04-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-08",
     "prev_date": "2026-04-07",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-07"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-09",
     "prev_date": "2026-04-08",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-08"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-10",
     "prev_date": "2026-04-09",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-09"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-06"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-13",
     "prev_date": "2026-04-10",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-10"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-14",
     "prev_date": "2026-04-13",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-15",
     "prev_date": "2026-04-14",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-14"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-16",
     "prev_date": "2026-04-15",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-15"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-17",
     "prev_date": "2026-04-16",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-16"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-13"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-20",
     "prev_date": "2026-04-17",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-17"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-21",
     "prev_date": "2026-04-20",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-20"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-22",
     "prev_date": "2026-04-21",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-21"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-23",
     "prev_date": "2026-04-22",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-22"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-24",
     "prev_date": "2026-04-23",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-23"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-20"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-27",
     "prev_date": "2026-04-24",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-24"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-28",
     "prev_date": "2026-04-27",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-27"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-29",
     "prev_date": "2026-04-28",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-28"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-04-30",
     "prev_date": "2026-04-29",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-29"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-01",
     "prev_date": "2026-04-30",
-    "context_dates": [],
+    "context_dates": [
+      "2026-04-30"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-04-27"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-04",
     "prev_date": "2026-05-01",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-01"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-05",
     "prev_date": "2026-05-04",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-04"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-06",
     "prev_date": "2026-05-05",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-05"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-07",
     "prev_date": "2026-05-06",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-06"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-08",
     "prev_date": "2026-05-07",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-07"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-04"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-11",
     "prev_date": "2026-05-08",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-08"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-12",
     "prev_date": "2026-05-11",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-11"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-13",
     "prev_date": "2026-05-12",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-12"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-14",
     "prev_date": "2026-05-13",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-13"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
+    "week": null
   },
   {
     "ticker": "SOXL",
     "date": "2026-05-15",
     "prev_date": "2026-05-14",
-    "context_dates": [],
+    "context_dates": [
+      "2026-05-14"
+    ],
     "has_5sec": true,
     "prev_close": null,
-    "week": "2026-05-11"
+    "week": null
   }
 ]
