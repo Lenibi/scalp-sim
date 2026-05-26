@@ -237,7 +237,7 @@
       <span class="hud-val" id="hud-pnl">$0.00</span>
     </div>
     <span style="flex:1"></span>
-    <button id="btn-vol" class="primary active" title="Toggle volume + VWAP">VOL</button>
+    <button id="btn-vol" class="primary active" title="Toggle volume bars">VOL</button>
     <button id="btn-reset" title="Reset session">RST</button>
   </div>
   <!-- Chart with floating position tag -->
@@ -338,7 +338,7 @@ let cursorIdx = 0;               // index of "current" bar in sessionBars
 let position = null;             // {side: 'long'|'short', entryPrice, entryIdx, stopPct?}
 let trades = [];                 // [{side, entryPrice, exitPrice, pct, netDollar, entryTime, exitTime}]
 let accountValue = STARTING_ACCOUNT;
-let chart = null, candleSeries = null, volumeSeries = null, vwapSeries = null;
+let chart = null, candleSeries = null, volumeSeries = null;
 let entryLine = null, beLine = null, stopLine = null;
 let showVolume = localStorage.getItem(LS_SHOW_VOL) !== 'false';
 
@@ -471,14 +471,7 @@ function initChart() {
     scaleMargins: { top: 0.82, bottom: 0 }, borderColor: '#444',
     visible: showVolume,
   });
-  vwapSeries = chart.addLineSeries({
-    color: '#f6c143', lineWidth: 1,
-    lineStyle: LightweightCharts.LineStyle.Dashed,
-    priceLineVisible: false, crosshairMarkerVisible: false,
-    lastValueVisible: true, title: 'VWAP',
-  });
   volumeSeries.applyOptions({ visible: showVolume });
-  vwapSeries.applyOptions({ visible: showVolume });
   if (showVolume) $btnVol.classList.add('active');
   else $btnVol.classList.remove('active');
 }
@@ -571,7 +564,6 @@ async function loadSession(session) {
       time: b.t, open: b.o, high: b.h, low: b.l, close: b.c,
     })));
     volumeSeries.setData(computeVolumeData(sessionBars));
-    vwapSeries.setData(computeVWAP(sessionBars));
     // Start cursor at the earliest bar with volume>0 (so user sees something)
     cursorIdx = findFirstActiveBar(sessionBars);
     setCursor(cursorIdx);
@@ -616,7 +608,7 @@ function findFirstActiveBar(bars) {
   return 0;
 }
 
-// ===================== Volume + VWAP =====================
+// ===================== Volume =====================
 function computeVolumeData(bars) {
   const ROLL = 12;       // 1-minute rolling avg (12 x 5-sec bars)
   const HIGH_MULT = 1.5;
@@ -990,7 +982,6 @@ $btnReset.addEventListener('click', () => {
 $btnVol.addEventListener('click', () => {
   showVolume = !showVolume;
   volumeSeries.applyOptions({ visible: showVolume });
-  vwapSeries.applyOptions({ visible: showVolume });
   chart.priceScale('right').applyOptions({
     scaleMargins: { top: 0.05, bottom: showVolume ? 0.22 : 0.05 },
   });
