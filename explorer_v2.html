@@ -24,6 +24,7 @@
     cursor: pointer; font-family: inherit;
   }
   select:hover, button.btn:hover { background: #333; }
+  .btn.active { background: #4a8aa6; color: white; border-color: #66b0d0; }
   .nav-btn { font-weight: 700; font-size: 16px; min-width: 32px; }
   #chart-wrap { flex: 1; position: relative; min-height: 0; }
   #chart { width: 100%; height: 100%; }
@@ -73,6 +74,7 @@
     <span style="flex:1"></span>
     <button class="btn" id="jump-end" title="Jump to end">End</button>
     <button class="btn" id="jump-start" title="Jump to start">Start</button>
+    <button class="btn" id="toggle-vol" title="Toggle volume bars + VWAP">VOL</button>
   </div>
   <div id="status">Loading catalog...</div>
   <div id="chart-wrap"><div id="chart"></div></div>
@@ -104,6 +106,9 @@ let beUpLine = null;
 let beDownLine = null;
 let position = null;
 let positionLines = { entry: null, breakeven: null };
+let volumeSeries = null;
+let vwapSeries = null;
+let showVolume = localStorage.getItem('scalp_show_volume') !== 'false';  // default true
 
 // ---------- DOM ----------
 const $ticker = document.getElementById('ticker-select');
@@ -119,6 +124,7 @@ const $btnShort = document.getElementById('btn-short');
 const $btnClose = document.getElementById('btn-close');
 const $btnBE = document.getElementById('btn-be');
 const $btnReset = document.getElementById('btn-reset');
+const $toggleVol = document.getElementById('toggle-vol');
 
 // ---------- Safe DOM helpers ----------
 function el(tag, opts = {}, ...kids) {
@@ -160,6 +166,23 @@ function initChart() {
     borderUpColor: '#4fd17a', borderDownColor: '#f76b6b',
     wickUpColor: '#4fd17a', wickDownColor: '#f76b6b',
   });
+  volumeSeries = chart.addHistogramSeries({
+    priceScaleId: 'volume',
+    priceFormat: { type: 'volume' },
+  });
+  vwapSeries = chart.addLineSeries({
+    color: '#f0c040',
+    lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    priceLineVisible: false,
+    crosshairMarkerVisible: false,
+    lastValueVisible: true,
+    title: 'VWAP',
+  });
+  applyChartMargins(showVolume);
+  volumeSeries.applyOptions({ visible: showVolume });
+  vwapSeries.applyOptions({ visible: showVolume });
+  if (showVolume) $toggleVol.classList.add('active');
   chart.subscribeClick(param => {
     if (!param.time || !bars.length) return;
     const idx = bars.findIndex(b => b.t === param.time);
@@ -209,6 +232,8 @@ async function loadWeek() {
     candleSeries.setData(bars.map(b => ({
       time: b.t, open: b.o, high: b.h, low: b.l, close: b.c,
     })));
+    volumeSeries.setData(computeVolumeData(bars));
+    vwapSeries.setData(computeVWAP(bars));
     chart.timeScale().fitContent();
     currentBarIndex = bars.length - 1;
     $status.textContent = currentTicker + ' week ' + currentWeek + ': ' + bars.length.toLocaleString() + ' bars';
@@ -216,6 +241,82 @@ async function loadWeek() {
   } catch (e) {
     $status.textContent = 'Failed to load week ' + currentWeek + ': ' + e.message;
   }
+}
+
+// ---------- Volume + VWAP computation ----------
+function applyChartMargins(volumeOn) {
+  chart.priceScale('right').applyOptions({
+    scaleMargins: { top: 0.05, bottom: volumeOn ? 0.22 : 0.05 },
+  });
+  if (volumeOn) {
+    chart.priceScale('volume').applyOptions({
+      scaleMargins: { top: 0.82, bottom: 0 },
+      borderColor: '#444',
+    });
+  }
+}
+
+function computeVolumeData(bars) {
+  // 12 bars * 5s = 1 minute rolling window. High vol = current > 1.5x rolling avg.
+  const ROLLING = 12;
+  const HIGH_MULT = 1.5;
+  const out = [];
+  let rollSum = 0;
+  for (let i = 0; i < bars.length; i++) {
+    rollSum += bars[i].v;
+    if (i >= ROLLING) rollSum -= bars[i - ROLLING].v;
+    const denom = Math.min(i + 1, ROLLING);
+    const avg = denom > 0 ? rollSum / denom : 0;
+    const high = avg > 0 && bars[i].v > HIGH_MULT * avg;
+    const up = bars[i].c >= bars[i].o;
+    let color;
+    if (high) color = up ? '#4fd17a' : '#f76b6b';     // bright
+    else      color = up ? '#2a5036' : '#5a2a2a';     // dim
+    out.push({ time: bars[i].t, value: bars[i].v, color });
+  }
+  return out;
+}
+
+function getSessionKey(unixTs) {
+  // Session resets at 9:30 AM ET. Before 9:30 AM -> belongs to previous session.
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  }).formatToParts(new Date(unixTs * 1000));
+  const get = type => parts.find(p => p.type === type).value;
+  const y = get('year'), m = get('month'), day = get('day');
+  let hh = parseInt(get('hour'), 10);
+  if (hh === 24) hh = 0;
+  const mm = parseInt(get('minute'), 10);
+  if (hh < 9 || (hh === 9 && mm < 30)) {
+    const prev = new Date(`${y}-${m}-${day}T12:00:00Z`);
+    prev.setUTCDate(prev.getUTCDate() - 1);
+    return prev.toISOString().slice(0, 10);
+  }
+  return `${y}-${m}-${day}`;
+}
+
+function computeVWAP(bars) {
+  const out = [];
+  let cumNum = 0, cumDen = 0;
+  let prevKey = null;
+  for (const bar of bars) {
+    const key = getSessionKey(bar.t);
+    if (key !== prevKey) {
+      cumNum = 0; cumDen = 0;
+      prevKey = key;
+    }
+    if (bar.v > 0) {
+      const typical = (bar.h + bar.l + bar.c) / 3;
+      cumNum += typical * bar.v;
+      cumDen += bar.v;
+    }
+    if (cumDen > 0) {
+      out.push({ time: bar.t, value: cumNum / cumDen });
+    }
+  }
+  return out;
 }
 
 // ---------- Playhead ----------
@@ -369,6 +470,15 @@ $btnShort.addEventListener('click', () => openPosition('short'));
 $btnClose.addEventListener('click', closePosition);
 $btnReset.addEventListener('click', () => { clearPosition(); hideBreakeven(); });
 $btnBE.addEventListener('click', () => { if (beVisible) hideBreakeven(); else showBreakeven(); });
+$toggleVol.addEventListener('click', () => {
+  showVolume = !showVolume;
+  volumeSeries.applyOptions({ visible: showVolume });
+  vwapSeries.applyOptions({ visible: showVolume });
+  applyChartMargins(showVolume);
+  if (showVolume) $toggleVol.classList.add('active');
+  else $toggleVol.classList.remove('active');
+  localStorage.setItem('scalp_show_volume', showVolume ? 'true' : 'false');
+});
 
 // ---------- Init ----------
 initChart();
