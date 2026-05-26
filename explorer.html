@@ -1164,6 +1164,8 @@ function _pickSessionRaw() {
   const fivesecOnly = fivesecRaw === null ? true : (fivesecRaw === '1');
   const tickerFilter = localStorage.getItem(LS_KEYS.tickerFilter) || '';
   let pool = CATALOG;
+  // Only sessions that have a prev_date (yesterday context available)
+  pool = pool.filter(s => s.prev_date);
   if (fivesecOnly) pool = pool.filter(s => s.has_5sec);
   if (tickerFilter) pool = pool.filter(s => s.ticker === tickerFilter);
   if (pool.length === 0) {
@@ -1252,7 +1254,7 @@ const TODAY_TICKS = FIVE_SEC_MODE ? TODAY_5S_BARS : TODAY_1M_BARS;
 // Cap to last ~30 bars of yesterday so the chart has context to the left
 // of today's live candle without dragging in a week of history.
 let PREV_BARS_FULL = aggregateBars(expandBars(PREV_BARS_RAW), CANDLE_BUCKET_SECONDS);
-let PREV_BARS = PREV_BARS_FULL.slice(-30);
+let PREV_BARS = PREV_BARS_FULL.slice(-200);
 // Today (full session, for B&H baseline computation): aggregate ticks to 10-min
 let TODAY_BARS = aggregateBars(TODAY_TICKS, CANDLE_BUCKET_SECONDS);
 
@@ -1375,7 +1377,7 @@ function rebuildBuckets(newBucketSec) {
   localStorage.setItem('scalp_sim_bucket_sec', String(newBucketSec));
   // Re-aggregate everything at the new bucket
   PREV_BARS_FULL = aggregateBars(expandBars(PREV_BARS_RAW), CANDLE_BUCKET_SECONDS);
-  PREV_BARS = PREV_BARS_FULL.slice(-30);
+  PREV_BARS = PREV_BARS_FULL.slice(-200);
   TODAY_BARS = aggregateBars(TODAY_TICKS, CANDLE_BUCKET_SECONDS);
   // Wipe the chart series and replay ticks 0..(tickIdx-1) to rebuild the
   // live candle at the new bucket size. Position state stays intact.
