@@ -1397,12 +1397,13 @@ function rebuildBuckets(newBucketSec) {
       liveCandle = {
         time: bucket,
         open: tick.open, high: tick.high, low: tick.low, close: tick.close,
-        hhmm: hhmm,
+        v: tick.v || 0, hhmm: hhmm,
       };
     } else {
       liveCandle.high = Math.max(liveCandle.high, tick.high);
       liveCandle.low = Math.min(liveCandle.low, tick.low);
       liveCandle.close = tick.close;
+      liveCandle.v = (liveCandle.v || 0) + (tick.v || 0);
     }
     liveTickPrice = tick.close;
     candleSeries.update(liveCandle);
@@ -2281,12 +2282,13 @@ function advance() {
     liveCandle = {
       time: bucket,
       open: tick.open, high: tick.high, low: tick.low, close: tick.close,
-      hhmm: hhmm,
+      v: tick.v || 0, hhmm: hhmm,
     };
   } else {
     liveCandle.high = Math.max(liveCandle.high, tick.high);
     liveCandle.low = Math.min(liveCandle.low, tick.low);
     liveCandle.close = tick.close;
+    liveCandle.v = (liveCandle.v || 0) + (tick.v || 0);
   }
   liveTickPrice = tick.close;
   candleSeries.update(liveCandle);
