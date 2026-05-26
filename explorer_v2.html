@@ -2,131 +2,387 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Scalp Sim v2 -- 5-sec 24/7</title>
 <script src="lightweight-charts.js"></script>
 <style>
   * { box-sizing: border-box; }
   body {
-    margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: #1a1a1a; color: #ddd;
-    -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    background: #0f1419;
+    color: #d5d8dc;
+    height: 100vh;
+    overflow: hidden;
   }
-  #app { display: flex; flex-direction: column; height: 100vh; }
+  #app {
+    display: flex; flex-direction: column;
+    height: 100vh; padding: 4px; gap: 4px;
+  }
+  /* Top HUD bar */
   #topbar {
-    display: flex; gap: 8px; padding: 8px 10px; align-items: center;
-    background: #222; border-bottom: 1px solid #333; flex-wrap: wrap;
+    background: #1a1f26; border: 1px solid #2a3038; border-radius: 6px;
+    padding: 6px 8px; display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap; flex: 0 0 auto;
   }
-  #topbar label { font-size: 13px; color: #888; }
-  select, button.btn {
-    background: #2a2a2a; color: #ddd; border: 1px solid #444;
-    padding: 6px 10px; border-radius: 4px; font-size: 14px;
+  #topbar select, #topbar button {
+    background: #232830; color: #d5d8dc; border: 1px solid #2a3038;
+    padding: 4px 8px; border-radius: 4px; font-size: 12px;
     cursor: pointer; font-family: inherit;
   }
-  select:hover, button.btn:hover { background: #333; }
-  .btn.active { background: #4a8aa6; color: white; border-color: #66b0d0; }
-  .nav-btn { font-weight: 700; font-size: 16px; min-width: 32px; }
-  #chart-wrap { flex: 1; position: relative; min-height: 0; }
+  #topbar button:hover { background: #2a3038; }
+  #topbar button.primary {
+    background: #2f4858; color: #88ddff; border-color: #4a8aa6;
+    font-weight: 600;
+  }
+  #topbar button.primary:hover { background: #3a5870; }
+  #topbar button.active {
+    background: #4a8aa6; color: #fff; border-color: #66b0d0;
+  }
+  .hud-block {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 0 8px; border-left: 1px solid #2a3038;
+    min-width: 0;
+  }
+  .hud-block:first-of-type { border-left: none; }
+  .hud-label {
+    font-size: 9px; color: #889; text-transform: uppercase;
+    letter-spacing: 0.05em; font-weight: 700; white-space: nowrap;
+  }
+  .hud-val {
+    font-family: Consolas, monospace; font-size: 13px; font-weight: 700;
+    color: #fff; white-space: nowrap;
+  }
+  .hud-val.good { color: #4ade80; }
+  .hud-val.bad  { color: #f87171; }
+  .hud-val.neu  { color: #f6c143; }
+  /* Big current-time display, TWS style */
+  .hud-time {
+    font-family: Consolas, monospace; font-size: 16px; font-weight: 800;
+    color: #f6c143; letter-spacing: 0.03em; padding: 0 6px;
+  }
+  /* Chart area */
+  #chart-wrap {
+    flex: 1 1 auto; min-height: 0;
+    position: relative; background: #000;
+    border: 1px solid #2a3038; border-radius: 4px;
+    overflow: hidden;
+  }
   #chart { width: 100%; height: 100%; }
-  #status {
-    font-size: 12px; color: #888; padding: 6px 10px;
-    background: #1d1d1d; border-bottom: 1px solid #333;
+  /* Bottom controls */
+  #controls {
+    flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px;
+    padding: 2px;
   }
-  #actions {
-    display: flex; gap: 6px; padding: 10px;
-    background: #222; border-top: 1px solid #333; flex-wrap: wrap;
+  .ctrl-row { display: flex; gap: 4px; }
+  .ctrl-row button {
+    flex: 1 1 0; min-width: 0; padding: 0; border: none; border-radius: 5px;
+    font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit;
+    color: #fff;
   }
-  button.action {
-    flex: 1; min-width: 80px; padding: 12px 8px; border-radius: 6px;
-    font-weight: 700; font-size: 13px; border: none; cursor: pointer;
-    font-family: inherit;
+  .ctrl-row.tier-1 button { min-height: 50px; font-size: 15px; }
+  .ctrl-row.tier-2 button { min-height: 36px; font-size: 12px; font-weight: 700; }
+  .ctrl-row.tier-3 button { min-height: 28px; font-size: 11px; font-weight: 600; opacity: 0.85; }
+  .btn-step  { background: #2f4858; color: #88ddff; border: 1px solid #4a8aa6; }
+  .btn-step:hover { background: #3a5870; }
+  .btn-buy   { background: #1f7a4d; color: #fff; }
+  .btn-buy:hover { background: #248a5a; }
+  .btn-short { background: #b03030; color: #fff; }
+  .btn-short:hover { background: #c83838; }
+  .btn-close { background: #f6c143; color: #1a1500; }
+  .btn-close:hover { background: #ffd060; }
+  .btn-ghost { background: #232830; color: #ccc; border: 1px solid #2a3038; }
+  .btn-ghost:hover { background: #2a3038; }
+  .ctrl-row .stop-input {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 4px;
+    color: #ccc; font-size: 11px; background: #232830;
+    border: 1px solid #2a3038; padding: 2px 6px; border-radius: 4px;
   }
-  .buy   { background: #1f7a4d; color: white; }
-  .short { background: #b03030; color: white; }
-  .close { background: #f6c143; color: #1a1500; }
-  .be    { background: #2f4858; color: white; }
-  .be.active { background: #4a8aa6; color: white; box-shadow: inset 0 0 0 2px #88ddff; }
-  .reset { background: #444; color: white; }
-  #info {
-    font-size: 12px; padding: 6px 10px; color: #aaa;
-    background: #1d1d1d; min-height: 32px;
+  .stop-input input {
+    width: 44px; background: #1a1a1a; border: 1px solid #444; color: #fff;
+    padding: 2px 4px; border-radius: 3px; font-family: Consolas, monospace;
+    font-size: 12px; text-align: right;
   }
-  #info .label { color: #fff; font-weight: 600; }
-  .pos-long  { color: #4fd17a; }
-  .pos-short { color: #f76b6b; }
-  .pnl-pos { color: #4fd17a; }
-  .pnl-neg { color: #f76b6b; }
+  /* Trade history pill */
+  #trades-section {
+    flex: 0 0 auto; max-height: 22vh; min-height: 60px;
+    background: #1a1f26; border: 1px solid #2a3038; border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  #trades-section .header {
+    background: #232830; color: #f6c143; padding: 4px 10px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid #2a3038; flex: 0 0 auto;
+  }
+  #trades-section .header .spacer { flex: 1; }
+  #trades-section .header .clear-btn {
+    background: none; border: 1px solid #555; color: #888;
+    padding: 1px 6px; border-radius: 3px; font-size: 9px; cursor: pointer;
+  }
+  #trades-section table {
+    width: 100%; border-collapse: collapse;
+    font-family: Consolas, monospace; font-size: 11px;
+  }
+  #trades-section thead th {
+    background: #232830; color: #889; font-weight: 500;
+    padding: 3px 6px; text-align: right; font-size: 9px;
+    text-transform: uppercase; border-bottom: 1px solid #2a3038;
+    position: sticky; top: 0;
+  }
+  #trades-section thead th.l, #trades-section tbody td.l { text-align: left; }
+  #trades-section tbody td {
+    padding: 3px 6px; text-align: right;
+    border-bottom: 1px solid #1a1f26; color: #d5d8dc;
+  }
+  #trades-section tbody td.win { color: #4ade80; font-weight: 700; }
+  #trades-section tbody td.loss { color: #f87171; font-weight: 700; }
+  #trades-section .body-wrap { flex: 1 1 auto; overflow-y: auto; }
+  #trades-section .empty {
+    color: #555; text-align: center; padding: 12px;
+    font-size: 11px; font-style: italic;
+  }
+  /* Position floating tag on chart */
+  #pos-tag {
+    position: absolute; top: 6px; left: 6px; z-index: 10;
+    background: #1a1f26; border: 1px solid #4a8aa6; border-radius: 4px;
+    padding: 4px 10px; font-family: Consolas, monospace; font-size: 12px;
+    color: #fff; font-weight: 700; display: none;
+  }
+  #pos-tag.long { border-color: #4ade80; }
+  #pos-tag.short { border-color: #f87171; }
+  #pos-tag .pnl-pos { color: #4ade80; }
+  #pos-tag .pnl-neg { color: #f87171; }
+  /* Day log floating panel (closed by default) */
+  #daylog-drawer {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 86vw; max-width: 360px; z-index: 100;
+    background: #1a1f26; border-right: 1px solid #2a3038;
+    transform: translateX(-100%); transition: transform 200ms ease-out;
+    display: flex; flex-direction: column;
+  }
+  #daylog-drawer.open { transform: translateX(0); }
+  #daylog-drawer .header {
+    background: #232830; padding: 10px 14px;
+    color: #f6c143; font-weight: 700; font-size: 13px;
+    border-bottom: 1px solid #2a3038;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #daylog-drawer .body { flex: 1; overflow-y: auto; padding: 8px; }
+  #daylog-drawer table { width: 100%; border-collapse: collapse;
+    font-family: Consolas, monospace; font-size: 12px; }
+  #daylog-drawer th {
+    color: #889; font-weight: 500; padding: 5px 6px;
+    text-align: right; font-size: 10px; border-bottom: 1px solid #2a3038;
+  }
+  #daylog-drawer th.l, #daylog-drawer td.l { text-align: left; }
+  #daylog-drawer td { padding: 4px 6px; text-align: right;
+    border-bottom: 1px solid #232830; color: #d5d8dc; }
+  #daylog-drawer .win { color: #4ade80; font-weight: 700; }
+  #daylog-drawer .loss { color: #f87171; font-weight: 700; }
+  #daylog-drawer .totals {
+    background: #232830; border-top: 1px solid #2a3038;
+    padding: 8px 14px; display: flex; justify-content: space-between;
+    font-family: Consolas, monospace; font-size: 13px; font-weight: 700;
+  }
+  #drawer-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 95;
+    display: none;
+  }
+  #drawer-backdrop.open { display: block; }
+  /* Mobile tweaks */
   @media (max-width: 700px) {
-    select, button.btn { font-size: 13px; }
-    button.action { font-size: 12px; padding: 10px 6px; }
-    #topbar { padding: 6px; gap: 4px; }
+    #topbar { gap: 4px; padding: 4px 6px; }
+    .hud-block { padding: 0 4px; }
+    .hud-val { font-size: 11px; }
+    .hud-label { font-size: 8px; }
+    .hud-time { font-size: 14px; padding: 0 3px; }
+    .ctrl-row.tier-1 button { min-height: 54px; font-size: 14px; }
+    #topbar select, #topbar button { font-size: 11px; padding: 3px 6px; }
+  }
+  /* Status line */
+  #status {
+    flex: 0 0 auto; font-size: 10px; color: #889; padding: 2px 8px;
+    font-family: Consolas, monospace;
   }
 </style>
 </head>
 <body>
 <div id="app">
+  <!-- Top HUD bar -->
   <div id="topbar">
-    <label>Ticker:</label>
-    <select id="ticker-select"></select>
-    <button class="btn nav-btn" id="week-prev" title="Previous week">&laquo;</button>
-    <select id="week-select" style="min-width:180px"></select>
-    <button class="btn nav-btn" id="week-next" title="Next week">&raquo;</button>
+    <button id="btn-daylog" title="Day Log">&#9776;</button>
+    <select id="ticker-select" title="Ticker"></select>
+    <select id="session-select" style="min-width:130px" title="Session day"></select>
+    <button id="btn-next" class="primary" title="Random next session">NEXT &raquo;</button>
+    <span class="hud-time" id="hud-time">--:--:-- ET</span>
+    <div class="hud-block">
+      <span class="hud-label">PRICE</span>
+      <span class="hud-val" id="hud-price">$--.--</span>
+    </div>
+    <div class="hud-block">
+      <span class="hud-label">CHG</span>
+      <span class="hud-val" id="hud-change">--%</span>
+    </div>
+    <div class="hud-block">
+      <span class="hud-label">ACCT</span>
+      <span class="hud-val" id="hud-account">$10,000</span>
+    </div>
+    <div class="hud-block">
+      <span class="hud-label">P&amp;L</span>
+      <span class="hud-val" id="hud-pnl">$0.00</span>
+    </div>
     <span style="flex:1"></span>
-    <button class="btn" id="jump-end" title="Jump to end">End</button>
-    <button class="btn" id="jump-start" title="Jump to start">Start</button>
-    <button class="btn" id="toggle-vol" title="Toggle volume bars + VWAP">VOL</button>
+    <button id="btn-vol" class="primary active" title="Toggle volume + VWAP">VOL</button>
+    <button id="btn-reset" title="Reset session">RST</button>
+  </div>
+  <!-- Chart with floating position tag -->
+  <div id="chart-wrap">
+    <div id="pos-tag"></div>
+    <div id="chart"></div>
+  </div>
+  <!-- Controls -->
+  <div id="controls">
+    <div class="ctrl-row tier-1">
+      <button class="btn-step" id="btn-step">+5s</button>
+      <button class="btn-buy"   id="btn-buy">BUY</button>
+      <button class="btn-short" id="btn-short">SHORT</button>
+      <button class="btn-close" id="btn-close">CLOSE</button>
+    </div>
+    <div class="ctrl-row tier-2">
+      <button class="btn-step" id="btn-step-1m">+1m</button>
+      <button class="btn-step" id="btn-step-5m">+5m</button>
+      <button class="btn-buy"   id="btn-buy-sl"   style="opacity:.85">BUY+SL</button>
+      <button class="btn-short" id="btn-short-sl" style="opacity:.85">SHORT+SL</button>
+      <label class="stop-input">SL%<input id="stop-pct" type="number" min="0.1" max="20" step="0.1" value="1.0"></label>
+    </div>
+    <div class="ctrl-row tier-3">
+      <button class="btn-ghost" id="btn-step-15m">+15m</button>
+      <button class="btn-ghost" id="btn-step-1h">+1h</button>
+      <button class="btn-ghost" id="btn-jump-rth">RTH</button>
+      <button class="btn-ghost" id="btn-jump-end">END</button>
+    </div>
+  </div>
+  <!-- Trade history -->
+  <div id="trades-section">
+    <div class="header">
+      <span>Trades</span>
+      <span class="spacer"></span>
+      <span>Win <span id="winrate" style="color:#f6c143">0/0</span></span>
+      <button class="clear-btn" id="clear-trades">CLEAR</button>
+    </div>
+    <div class="body-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="l">Side</th>
+            <th class="l">Entry</th>
+            <th class="l">Exit</th>
+            <th>%</th>
+            <th>Net $</th>
+          </tr>
+        </thead>
+        <tbody id="trades-tbody"></tbody>
+      </table>
+      <div class="empty" id="trades-empty">No trades yet</div>
+    </div>
   </div>
   <div id="status">Loading catalog...</div>
-  <div id="chart-wrap"><div id="chart"></div></div>
-  <div id="info">Click a bar to set the playhead cursor. Breakeven anchors to that bar.</div>
-  <div id="actions">
-    <button class="action buy"   id="btn-buy">BUY (long)</button>
-    <button class="action short" id="btn-short">SHORT</button>
-    <button class="action close" id="btn-close">CLOSE</button>
-    <button class="action be"    id="btn-be">BE</button>
-    <button class="action reset" id="btn-reset">Reset</button>
+</div>
+<!-- Day log drawer -->
+<div id="drawer-backdrop"></div>
+<div id="daylog-drawer">
+  <div class="header">
+    <span>Day Log</span>
+    <span style="flex:1"></span>
+    <button class="clear-btn" id="daylog-reset" style="background:none;border:1px solid #555;color:#888;padding:2px 8px;border-radius:3px;font-size:10px;cursor:pointer">RESET</button>
+    <button id="daylog-close" style="background:none;border:none;color:#f6c143;font-size:18px;cursor:pointer">&times;</button>
+  </div>
+  <div class="body">
+    <table>
+      <thead><tr><th class="l">Date</th><th class="l">Tkr</th><th>Trades</th><th>Net $</th></tr></thead>
+      <tbody id="daylog-tbody"></tbody>
+    </table>
+    <div id="daylog-empty" style="color:#555;text-align:center;padding:20px;font-size:11px">No sessions logged</div>
+  </div>
+  <div class="totals">
+    <span>Total <span id="daylog-total-pnl" style="color:#fff">$0.00</span></span>
+    <span>Sessions <span id="daylog-total-count" style="color:#fff">0</span></span>
   </div>
 </div>
 
 <script>
-// ---------- Config ----------
-const ROUND_TRIP_COST_PCT = 0.04;  // 0.04% = 4 bps (round-trip).
+// ===================== Config =====================
+const ROUND_TRIP_COST_PCT = 0.04;  // 4 bps round-trip friction
+const STARTING_ACCOUNT = 10000;
+const POSITION_PCT = 1.0;          // use 100% of account per trade
 const DATA_BASE = 'data/';
+const LS_DAYLOG = 'scalp_v2_daylog';
+const LS_SHOW_VOL = 'scalp_v2_show_vol';
+const LS_TICKER = 'scalp_v2_ticker';
+const LS_LAST_SESSION = 'scalp_v2_last_session';
 
-// ---------- State ----------
+// ===================== State =====================
 let catalog = null;
+let allSessions = [];           // [{ticker, date, week, label}]
 let currentTicker = null;
-let currentWeek = null;
-let bars = [];
-let chart = null;
-let candleSeries = null;
-let currentBarIndex = null;
-let beVisible = false;
-let beUpLine = null;
-let beDownLine = null;
-let position = null;
-let positionLines = { entry: null, breakeven: null };
-let volumeSeries = null;
-let vwapSeries = null;
-let showVolume = localStorage.getItem('scalp_show_volume') !== 'false';  // default true
+let currentSession = null;       // {ticker, date, week}
+let weekBars = null;             // full week of bars (raw)
+let sessionBars = [];            // bars for the active 24h session
+let etOffsetSec = 0;             // ET offset for the current week (seconds)
+let cursorIdx = 0;               // index of "current" bar in sessionBars
+let position = null;             // {side: 'long'|'short', entryPrice, entryIdx, stopPct?}
+let trades = [];                 // [{side, entryPrice, exitPrice, pct, netDollar, entryTime, exitTime}]
+let accountValue = STARTING_ACCOUNT;
+let chart = null, candleSeries = null, volumeSeries = null, vwapSeries = null;
+let entryLine = null, beLine = null, stopLine = null;
+let showVolume = localStorage.getItem(LS_SHOW_VOL) !== 'false';
 
-// ---------- DOM ----------
-const $ticker = document.getElementById('ticker-select');
-const $week = document.getElementById('week-select');
-const $weekPrev = document.getElementById('week-prev');
-const $weekNext = document.getElementById('week-next');
-const $jumpEnd = document.getElementById('jump-end');
-const $jumpStart = document.getElementById('jump-start');
-const $status = document.getElementById('status');
-const $info = document.getElementById('info');
+// ===================== DOM =====================
+const $tickerSel = document.getElementById('ticker-select');
+const $sessionSel = document.getElementById('session-select');
+const $btnNext = document.getElementById('btn-next');
+const $hudTime = document.getElementById('hud-time');
+const $hudPrice = document.getElementById('hud-price');
+const $hudChange = document.getElementById('hud-change');
+const $hudAccount = document.getElementById('hud-account');
+const $hudPnl = document.getElementById('hud-pnl');
+const $btnVol = document.getElementById('btn-vol');
+const $btnReset = document.getElementById('btn-reset');
+const $btnStep = document.getElementById('btn-step');
+const $btnStep1m = document.getElementById('btn-step-1m');
+const $btnStep5m = document.getElementById('btn-step-5m');
+const $btnStep15m = document.getElementById('btn-step-15m');
+const $btnStep1h = document.getElementById('btn-step-1h');
+const $btnJumpRTH = document.getElementById('btn-jump-rth');
+const $btnJumpEnd = document.getElementById('btn-jump-end');
 const $btnBuy = document.getElementById('btn-buy');
 const $btnShort = document.getElementById('btn-short');
 const $btnClose = document.getElementById('btn-close');
-const $btnBE = document.getElementById('btn-be');
-const $btnReset = document.getElementById('btn-reset');
-const $toggleVol = document.getElementById('toggle-vol');
+const $btnBuySL = document.getElementById('btn-buy-sl');
+const $btnShortSL = document.getElementById('btn-short-sl');
+const $stopPct = document.getElementById('stop-pct');
+const $tradesBody = document.getElementById('trades-tbody');
+const $tradesEmpty = document.getElementById('trades-empty');
+const $winrate = document.getElementById('winrate');
+const $clearTrades = document.getElementById('clear-trades');
+const $status = document.getElementById('status');
+const $posTag = document.getElementById('pos-tag');
+const $btnDaylog = document.getElementById('btn-daylog');
+const $daylogDrawer = document.getElementById('daylog-drawer');
+const $drawerBackdrop = document.getElementById('drawer-backdrop');
+const $daylogClose = document.getElementById('daylog-close');
+const $daylogReset = document.getElementById('daylog-reset');
+const $daylogBody = document.getElementById('daylog-tbody');
+const $daylogEmpty = document.getElementById('daylog-empty');
+const $daylogTotalPnl = document.getElementById('daylog-total-pnl');
+const $daylogTotalCount = document.getElementById('daylog-total-count');
 
-// ---------- Safe DOM helpers ----------
+// ===================== Helpers =====================
 function el(tag, opts = {}, ...kids) {
   const n = document.createElement(tag);
   if (opts.cls) n.className = opts.cls;
@@ -138,349 +394,644 @@ function el(tag, opts = {}, ...kids) {
   }
   return n;
 }
-function clearChildren(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+function clearChildren(n) { while (n.firstChild) n.removeChild(n.firstChild); }
 
-// ---------- Chart setup ----------
+function fmtMoney(v, withSign = false) {
+  const sign = v >= 0 ? (withSign ? '+' : '') : '-';
+  return sign + '$' + Math.abs(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(3) + '%'; }
+
+// Compute ET offset (in seconds) for a unix timestamp.
+// ET = UTC - offset. If you add `offset` to a UTC unix, the resulting
+// "fake UTC" date/time corresponds to ET wall time.
+function computeETOffset(unixSec) {
+  const d = new Date(unixSec * 1000);
+  const tzString = d.toLocaleString('en-US', { timeZone: 'America/New_York' });
+  // tzString is like "5/26/2026, 12:30:00 PM"
+  const utcString = d.toLocaleString('en-US', { timeZone: 'UTC' });
+  const tzMs = new Date(tzString).getTime();
+  const utcMs = new Date(utcString).getTime();
+  return Math.round((tzMs - utcMs) / 1000);
+}
+function etDateOf(unixSec) {
+  const shifted = (unixSec + etOffsetSec) * 1000;
+  const d = new Date(shifted);
+  return d.getUTCFullYear() + '-' +
+         String(d.getUTCMonth() + 1).padStart(2, '0') + '-' +
+         String(d.getUTCDate()).padStart(2, '0');
+}
+function etHourMinSec(unixSec) {
+  const shifted = (unixSec + etOffsetSec) * 1000;
+  const d = new Date(shifted);
+  return [d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()];
+}
+function etDow(unixSec) {
+  const shifted = (unixSec + etOffsetSec) * 1000;
+  const d = new Date(shifted);
+  return d.getUTCDay(); // 0=Sun ... 6=Sat
+}
+function etTimeStr(unixSec) {
+  const [h, m, s] = etHourMinSec(unixSec);
+  const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][etDow(unixSec)];
+  return dow + ' ' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' ET';
+}
+
+// ===================== Chart setup =====================
 function initChart() {
   if (chart) { chart.remove(); chart = null; }
-  const container = document.getElementById('chart');
-  chart = LightweightCharts.createChart(container, {
-    layout: { background: { color: '#1a1a1a' }, textColor: '#cccccc' },
-    grid: { vertLines: { color: '#252525' }, horzLines: { color: '#252525' } },
+  chart = LightweightCharts.createChart(document.getElementById('chart'), {
+    layout: { background: { color: '#000' }, textColor: '#ccc' },
+    grid: { vertLines: { color: '#1a1a1a' }, horzLines: { color: '#1a1a1a' } },
     timeScale: {
-      timeVisible: true, secondsVisible: true,
-      borderColor: '#444',
+      timeVisible: true, secondsVisible: true, borderColor: '#444',
       tickMarkFormatter: (time) => {
-        const d = new Date(time * 1000);
-        const opts = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York' };
-        const weekday = d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/New_York' });
-        const hm = d.toLocaleString('en-US', opts);
-        return weekday + ' ' + hm;
+        // Use ET conversion via offset
+        const shifted = (time + etOffsetSec) * 1000;
+        const d = new Date(shifted);
+        const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()];
+        const h = String(d.getUTCHours()).padStart(2,'0');
+        const m = String(d.getUTCMinutes()).padStart(2,'0');
+        return dow + ' ' + h + ':' + m;
       },
     },
-    rightPriceScale: { borderColor: '#444' },
+    rightPriceScale: { borderColor: '#444', scaleMargins: { top: 0.05, bottom: showVolume ? 0.22 : 0.05 } },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
   });
   candleSeries = chart.addCandlestickSeries({
-    upColor: '#4fd17a', downColor: '#f76b6b',
-    borderUpColor: '#4fd17a', borderDownColor: '#f76b6b',
-    wickUpColor: '#4fd17a', wickDownColor: '#f76b6b',
+    upColor: '#4ade80', downColor: '#f87171',
+    borderUpColor: '#4ade80', borderDownColor: '#f87171',
+    wickUpColor: '#4ade80', wickDownColor: '#f87171',
   });
   volumeSeries = chart.addHistogramSeries({
     priceScaleId: 'volume',
     priceFormat: { type: 'volume' },
   });
-  vwapSeries = chart.addLineSeries({
-    color: '#f0c040',
-    lineWidth: 1,
-    lineStyle: LightweightCharts.LineStyle.Dashed,
-    priceLineVisible: false,
-    crosshairMarkerVisible: false,
-    lastValueVisible: true,
-    title: 'VWAP',
+  chart.priceScale('volume').applyOptions({
+    scaleMargins: { top: 0.82, bottom: 0 }, borderColor: '#444',
+    visible: showVolume,
   });
-  applyChartMargins(showVolume);
+  vwapSeries = chart.addLineSeries({
+    color: '#f6c143', lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    priceLineVisible: false, crosshairMarkerVisible: false,
+    lastValueVisible: true, title: 'VWAP',
+  });
   volumeSeries.applyOptions({ visible: showVolume });
   vwapSeries.applyOptions({ visible: showVolume });
-  if (showVolume) $toggleVol.classList.add('active');
-  chart.subscribeClick(param => {
-    if (!param.time || !bars.length) return;
-    const idx = bars.findIndex(b => b.t === param.time);
-    if (idx >= 0) setPlayhead(idx);
-  });
+  if (showVolume) $btnVol.classList.add('active');
+  else $btnVol.classList.remove('active');
 }
 
-window.addEventListener('resize', () => { if (chart) chart.applyOptions({}); });
-
-// ---------- Catalog & week loading ----------
+// ===================== Data load =====================
 async function loadCatalog() {
   try {
     const resp = await fetch(DATA_BASE + 'catalog.json');
     catalog = await resp.json();
-    clearChildren($ticker);
-    catalog.tickers.forEach(t => $ticker.appendChild(el('option', { text: t })));
-    $ticker.querySelectorAll('option').forEach((o, i) => { o.value = catalog.tickers[i]; });
-    currentTicker = catalog.tickers[0];
-    populateWeeks();
-    if ($week.options.length > 0) {
-      currentWeek = $week.options[$week.options.length - 1].value;
-      $week.value = currentWeek;
-      await loadWeek();
+    clearChildren($tickerSel);
+    catalog.tickers.forEach(t => {
+      const opt = el('option', { text: t });
+      opt.value = t;
+      $tickerSel.appendChild(opt);
+    });
+    const savedTicker = localStorage.getItem(LS_TICKER);
+    currentTicker = (savedTicker && catalog.tickers.includes(savedTicker)) ? savedTicker : catalog.tickers[0];
+    $tickerSel.value = currentTicker;
+    await buildSessionList();
+    // Restore last session or pick last available
+    const last = localStorage.getItem(LS_LAST_SESSION);
+    let restored = null;
+    if (last) {
+      try { restored = JSON.parse(last); } catch (e) {}
+    }
+    let sessionToLoad = null;
+    if (restored && restored.ticker === currentTicker) {
+      sessionToLoad = allSessions.find(s => s.ticker === currentTicker && s.date === restored.date);
+    }
+    if (!sessionToLoad && allSessions.length) {
+      sessionToLoad = allSessions[allSessions.length - 1];
+    }
+    if (sessionToLoad) {
+      await loadSession(sessionToLoad);
     }
   } catch (e) {
-    $status.textContent = 'Failed to load catalog.json: ' + e.message;
+    $status.textContent = 'Failed to load catalog: ' + e.message;
   }
 }
 
-function populateWeeks() {
-  clearChildren($week);
-  const weeksForTicker = catalog.entries.filter(e => e.ticker === currentTicker).map(e => e.week_start);
-  weeksForTicker.forEach(w => {
-    const opt = el('option', { text: 'Week of ' + w });
-    opt.value = w;
-    $week.appendChild(opt);
+// Build session list: every weekday date in the catalog's weeks for current ticker.
+// Skip days where the week file doesn't contain enough bars (e.g. session crosses weekend).
+async function buildSessionList() {
+  allSessions = [];
+  const weeks = (catalog.entries || []).filter(e => e.ticker === currentTicker).map(e => e.week_start);
+  for (const w of weeks) {
+    // Week starts Monday. Sessions for that week = Tue/Wed/Thu/Fri/Mon (next-week Mon if covered).
+    // For each weekday Mon-Fri in the week, create a session.
+    const baseMs = Date.parse(w + 'T00:00:00Z');
+    for (let d = 0; d < 5; d++) {  // Mon=0 .. Fri=4
+      const dateMs = baseMs + d * 86400000;
+      const dateStr = new Date(dateMs).toISOString().slice(0, 10);
+      const label = ['Mon','Tue','Wed','Thu','Fri'][d] + ' ' + dateStr;
+      allSessions.push({ ticker: currentTicker, date: dateStr, week: w, label });
+    }
+  }
+  clearChildren($sessionSel);
+  allSessions.forEach(s => {
+    const opt = el('option', { text: s.label });
+    opt.value = s.date;
+    $sessionSel.appendChild(opt);
   });
 }
 
-async function loadWeek() {
-  $status.textContent = 'Loading ' + currentTicker + ' week ' + currentWeek + '...';
-  clearPosition();
-  hideBreakeven();
+async function loadSession(session) {
+  $status.textContent = 'Loading ' + session.label + '...';
+  closePositionSilent();
+  trades = [];
+  accountValue = STARTING_ACCOUNT;
+  renderTrades();
+  updateHud();
+  currentSession = session;
+  $sessionSel.value = session.date;
+  localStorage.setItem(LS_TICKER, session.ticker);
+  localStorage.setItem(LS_LAST_SESSION, JSON.stringify({ ticker: session.ticker, date: session.date }));
   try {
-    const resp = await fetch(DATA_BASE + currentTicker + '_week_' + currentWeek + '.json');
-    bars = await resp.json();
-    candleSeries.setData(bars.map(b => ({
+    const url = DATA_BASE + session.ticker + '_week_' + session.week + '.json';
+    const resp = await fetch(url);
+    weekBars = await resp.json();
+    if (!weekBars.length) { $status.textContent = 'Week file empty'; return; }
+    etOffsetSec = computeETOffset(weekBars[0].t);
+    // Slice the session: bars from prev-day 20:00 ET to session-date 20:00 ET.
+    // For Monday: from session-date 04:00 ET (no Sunday data).
+    sessionBars = sliceSessionBars(weekBars, session.date);
+    if (!sessionBars.length) {
+      $status.textContent = 'No bars for ' + session.label;
+      return;
+    }
+    candleSeries.setData(sessionBars.map(b => ({
       time: b.t, open: b.o, high: b.h, low: b.l, close: b.c,
     })));
-    volumeSeries.setData(computeVolumeData(bars));
-    vwapSeries.setData(computeVWAP(bars));
+    volumeSeries.setData(computeVolumeData(sessionBars));
+    vwapSeries.setData(computeVWAP(sessionBars));
+    // Start cursor at the earliest bar with volume>0 (so user sees something)
+    cursorIdx = findFirstActiveBar(sessionBars);
+    setCursor(cursorIdx);
     chart.timeScale().fitContent();
-    currentBarIndex = bars.length - 1;
-    $status.textContent = currentTicker + ' week ' + currentWeek + ': ' + bars.length.toLocaleString() + ' bars';
-    updateInfo();
+    $status.textContent = session.label + ' loaded -- ' + sessionBars.length + ' bars';
   } catch (e) {
-    $status.textContent = 'Failed to load week ' + currentWeek + ': ' + e.message;
+    $status.textContent = 'Load failed: ' + e.message;
   }
 }
 
-// ---------- Volume + VWAP computation ----------
-function applyChartMargins(volumeOn) {
-  chart.priceScale('right').applyOptions({
-    scaleMargins: { top: 0.05, bottom: volumeOn ? 0.22 : 0.05 },
-  });
-  if (volumeOn) {
-    chart.priceScale('volume').applyOptions({
-      scaleMargins: { top: 0.82, bottom: 0 },
-      borderColor: '#444',
-    });
+function sliceSessionBars(bars, sessionDate) {
+  // Session date = ET date string YYYY-MM-DD
+  // Include bars from prev day 20:00 ET through sessionDate 20:00 ET (24h window).
+  // For Monday, start at session-date 04:00 ET (no Sun data).
+  const out = [];
+  // Determine if session-date is Monday (so we start at 04:00 ET instead of prev-day 20:00).
+  const someBar = bars.find(b => etDateOf(b.t) === sessionDate);
+  const isMon = someBar ? etDow(someBar.t) === 1 : false;
+  // Compute prev-date string
+  const prev = (function() {
+    const d = new Date(sessionDate + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  })();
+  for (const b of bars) {
+    const ed = etDateOf(b.t);
+    const [hh] = etHourMinSec(b.t);
+    if (ed === sessionDate && hh < 20) { out.push(b); continue; }
+    if (!isMon && ed === prev && hh >= 20) { out.push(b); continue; }
+    if (isMon && ed === sessionDate && hh >= 4 && hh < 20) { /* already covered above */ }
   }
+  // Sort by time just in case
+  out.sort((a, b) => a.t - b.t);
+  return out;
 }
 
+function findFirstActiveBar(bars) {
+  // Start the cursor at the first bar with v > 0 (skip dead bars at session start)
+  for (let i = 0; i < bars.length; i++) {
+    if (bars[i].v > 0) return i;
+  }
+  return 0;
+}
+
+// ===================== Volume + VWAP =====================
 function computeVolumeData(bars) {
-  // 12 bars * 5s = 1 minute rolling window. High vol = current > 1.5x rolling avg.
-  const ROLLING = 12;
+  const ROLL = 12;       // 1-minute rolling avg (12 x 5-sec bars)
   const HIGH_MULT = 1.5;
   const out = [];
   let rollSum = 0;
   for (let i = 0; i < bars.length; i++) {
     rollSum += bars[i].v;
-    if (i >= ROLLING) rollSum -= bars[i - ROLLING].v;
-    const denom = Math.min(i + 1, ROLLING);
+    if (i >= ROLL) rollSum -= bars[i - ROLL].v;
+    const denom = Math.min(i + 1, ROLL);
     const avg = denom > 0 ? rollSum / denom : 0;
     const high = avg > 0 && bars[i].v > HIGH_MULT * avg;
     const up = bars[i].c >= bars[i].o;
     let color;
-    if (high) color = up ? '#4fd17a' : '#f76b6b';     // bright
-    else      color = up ? '#2a5036' : '#5a2a2a';     // dim
+    if (high) color = up ? '#4ade80' : '#f87171';
+    else      color = up ? '#2a5036' : '#5a2a2a';
     out.push({ time: bars[i].t, value: bars[i].v, color });
   }
   return out;
 }
 
-function getSessionKey(unixTs) {
-  // Session resets at 9:30 AM ET. Before 9:30 AM -> belongs to previous session.
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York', hour12: false,
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  }).formatToParts(new Date(unixTs * 1000));
-  const get = type => parts.find(p => p.type === type).value;
-  const y = get('year'), m = get('month'), day = get('day');
-  let hh = parseInt(get('hour'), 10);
-  if (hh === 24) hh = 0;
-  const mm = parseInt(get('minute'), 10);
-  if (hh < 9 || (hh === 9 && mm < 30)) {
-    const prev = new Date(`${y}-${m}-${day}T12:00:00Z`);
-    prev.setUTCDate(prev.getUTCDate() - 1);
-    return prev.toISOString().slice(0, 10);
-  }
-  return `${y}-${m}-${day}`;
-}
-
 function computeVWAP(bars) {
+  // Reset at 9:30 AM ET each day.
   const out = [];
   let cumNum = 0, cumDen = 0;
-  let prevKey = null;
-  for (const bar of bars) {
-    const key = getSessionKey(bar.t);
-    if (key !== prevKey) {
-      cumNum = 0; cumDen = 0;
-      prevKey = key;
+  let lastSessionKey = null;
+  for (const b of bars) {
+    const sk = sessionKeyForBar(b.t);
+    if (sk !== lastSessionKey) {
+      cumNum = 0; cumDen = 0; lastSessionKey = sk;
     }
-    if (bar.v > 0) {
-      const typical = (bar.h + bar.l + bar.c) / 3;
-      cumNum += typical * bar.v;
-      cumDen += bar.v;
+    if (b.v > 0) {
+      const typical = (b.h + b.l + b.c) / 3;
+      cumNum += typical * b.v;
+      cumDen += b.v;
     }
-    if (cumDen > 0) {
-      out.push({ time: bar.t, value: cumNum / cumDen });
-    }
+    if (cumDen > 0) out.push({ time: b.t, value: cumNum / cumDen });
   }
   return out;
 }
 
-// ---------- Playhead ----------
-function setPlayhead(idx) {
-  if (idx < 0 || idx >= bars.length) return;
-  currentBarIndex = idx;
-  if (beVisible) updateBreakevenLines();
-  updateInfo();
-}
-
-function currentPrice() {
-  if (currentBarIndex == null || !bars[currentBarIndex]) return null;
-  return bars[currentBarIndex].c;
-}
-
-// ---------- Breakeven ----------
-function showBreakeven() {
-  if (currentPrice() == null) return;
-  beVisible = true;
-  $btnBE.classList.add('active');
-  updateBreakevenLines();
-}
-function hideBreakeven() {
-  beVisible = false;
-  $btnBE.classList.remove('active');
-  if (beUpLine) { candleSeries.removePriceLine(beUpLine); beUpLine = null; }
-  if (beDownLine) { candleSeries.removePriceLine(beDownLine); beDownLine = null; }
-}
-function updateBreakevenLines() {
-  if (!beVisible) return;
-  const p = currentPrice();
-  if (p == null) return;
-  const half = ROUND_TRIP_COST_PCT / 2 / 100;
-  const upLevel = p * (1 + half);
-  const dnLevel = p * (1 - half);
-  if (beUpLine) candleSeries.removePriceLine(beUpLine);
-  if (beDownLine) candleSeries.removePriceLine(beDownLine);
-  beUpLine = candleSeries.createPriceLine({
-    price: upLevel, color: '#4fd17a', lineWidth: 1,
-    lineStyle: LightweightCharts.LineStyle.Dashed,
-    axisLabelVisible: true,
-    title: 'BE long ' + upLevel.toFixed(2),
-  });
-  beDownLine = candleSeries.createPriceLine({
-    price: dnLevel, color: '#f76b6b', lineWidth: 1,
-    lineStyle: LightweightCharts.LineStyle.Dashed,
-    axisLabelVisible: true,
-    title: 'BE short ' + dnLevel.toFixed(2),
-  });
-}
-
-// ---------- Position ----------
-function openPosition(side) {
-  if (position) return;
-  const p = currentPrice();
-  if (p == null) return;
-  position = { side, entryPrice: p, entryIndex: currentBarIndex };
-  drawPositionLines();
-  updateInfo();
-}
-function closePosition() {
-  if (!position) return;
-  const p = currentPrice();
-  if (p == null) return;
-  const gross = position.side === 'long' ? (p - position.entryPrice) : (position.entryPrice - p);
-  const grossPct = gross / position.entryPrice * 100;
-  const netPct = grossPct - ROUND_TRIP_COST_PCT;
-  const sideLabel = position.side === 'long' ? 'LONG' : 'SHORT';
-  alert(sideLabel + ' closed.\nEntry: $' + position.entryPrice.toFixed(2) +
-        '\nExit: $' + p.toFixed(2) +
-        '\nGross: ' + (grossPct>=0?'+':'') + grossPct.toFixed(3) + '%' +
-        '\nAfter cost: ' + (netPct>=0?'+':'') + netPct.toFixed(3) + '%');
-  clearPosition();
-}
-function clearPosition() {
-  position = null;
-  for (const k of Object.keys(positionLines)) {
-    if (positionLines[k]) { candleSeries.removePriceLine(positionLines[k]); positionLines[k] = null; }
+function sessionKeyForBar(unixSec) {
+  // Session key = ET date string IF time >= 9:30 AM ET, else previous ET date
+  const ed = etDateOf(unixSec);
+  const [h, m] = etHourMinSec(unixSec);
+  if (h < 9 || (h === 9 && m < 30)) {
+    const d = new Date(ed + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
   }
-  updateInfo();
+  return ed;
 }
-function drawPositionLines() {
+
+// ===================== Time stepping =====================
+function setCursor(idx) {
+  cursorIdx = Math.max(0, Math.min(sessionBars.length - 1, idx));
+  // Hide bars after cursor: lightweight-charts shows everything, but we control time-scale visible range
+  // Approach: setVisibleLogicalRange to [0, cursorIdx + buffer]
+  const visBars = 200; // last 200 bars before cursor
+  const from = Math.max(0, cursorIdx - visBars);
+  const to = cursorIdx + 5;  // small buffer
+  chart.timeScale().setVisibleLogicalRange({ from, to });
+  updateHud();
+  updatePositionTag();
+}
+
+function step(seconds) {
+  // Advance cursor by N seconds. Each bar is 5 sec, so step by N/5 indices.
+  const idxStep = Math.max(1, Math.round(seconds / 5));
+  // Check stop loss before advancing - simulate the move bar by bar
+  if (position && position.stopPct != null) {
+    for (let i = 1; i <= idxStep; i++) {
+      const probeIdx = cursorIdx + i;
+      if (probeIdx >= sessionBars.length) break;
+      const probeBar = sessionBars[probeIdx];
+      const stopHit = checkStopHit(probeBar);
+      if (stopHit) {
+        // Stop triggered. Close at the stop price on this bar.
+        cursorIdx = probeIdx;
+        closePosition(stopHit);
+        return;
+      }
+    }
+  }
+  setCursor(cursorIdx + idxStep);
+}
+
+function checkStopHit(bar) {
+  if (!position || position.stopPct == null) return null;
+  const sp = position.stopPct / 100;
+  if (position.side === 'long') {
+    const stopPrice = position.entryPrice * (1 - sp);
+    if (bar.l <= stopPrice) return stopPrice;
+  } else {
+    const stopPrice = position.entryPrice * (1 + sp);
+    if (bar.h >= stopPrice) return stopPrice;
+  }
+  return null;
+}
+
+function jumpToRTHOpen() {
+  // Jump cursor to first bar of session-date at 09:30:00 ET
+  if (!currentSession) return;
+  for (let i = 0; i < sessionBars.length; i++) {
+    if (etDateOf(sessionBars[i].t) === currentSession.date) {
+      const [h, m] = etHourMinSec(sessionBars[i].t);
+      if (h === 9 && m >= 30) { setCursor(i); return; }
+      if (h > 9) { setCursor(i); return; }
+    }
+  }
+}
+
+function jumpToEnd() { setCursor(sessionBars.length - 1); }
+
+// ===================== Position / trades =====================
+function currentBar() { return sessionBars[cursorIdx]; }
+function currentPrice() { return currentBar() ? currentBar().c : null; }
+
+function openPosition(side, withStop = false) {
+  if (position) return;  // already in a trade
+  const p = currentPrice();
+  if (p == null) return;
+  position = {
+    side, entryPrice: p, entryIdx: cursorIdx, entryTime: currentBar().t,
+    stopPct: withStop ? parseFloat($stopPct.value) || 1.0 : null,
+  };
+  drawPositionLines();
+  updateHud();
+  updatePositionTag();
+}
+
+function closePosition(forceExitPrice = null) {
   if (!position) return;
-  const entryColor = position.side === 'long' ? '#4fd17a' : '#f76b6b';
-  positionLines.entry = candleSeries.createPriceLine({
-    price: position.entryPrice, color: entryColor, lineWidth: 2,
+  const exitPrice = forceExitPrice != null ? forceExitPrice : currentPrice();
+  const exitTime = currentBar().t;
+  const grossPct = position.side === 'long'
+    ? (exitPrice - position.entryPrice) / position.entryPrice * 100
+    : (position.entryPrice - exitPrice) / position.entryPrice * 100;
+  const netPct = grossPct - ROUND_TRIP_COST_PCT;
+  const positionSize = accountValue * POSITION_PCT;
+  const netDollar = positionSize * (netPct / 100);
+  accountValue += netDollar;
+  trades.push({
+    side: position.side, entryPrice: position.entryPrice, exitPrice,
+    entryTime: position.entryTime, exitTime,
+    grossPct, netPct, netDollar,
+    stopHit: forceExitPrice != null,
+  });
+  clearPositionLines();
+  position = null;
+  renderTrades();
+  updateHud();
+  updatePositionTag();
+}
+
+function closePositionSilent() {
+  // Used when switching sessions -- don't record a trade
+  clearPositionLines();
+  position = null;
+  updatePositionTag();
+}
+
+function drawPositionLines() {
+  clearPositionLines();
+  if (!position) return;
+  const color = position.side === 'long' ? '#4ade80' : '#f87171';
+  entryLine = candleSeries.createPriceLine({
+    price: position.entryPrice, color, lineWidth: 2,
     lineStyle: LightweightCharts.LineStyle.Solid,
     axisLabelVisible: true,
-    title: position.side.toUpperCase() + ' entry $' + position.entryPrice.toFixed(2),
+    title: position.side.toUpperCase() + ' $' + position.entryPrice.toFixed(2),
   });
+  // Breakeven line
   const beLevel = position.side === 'long'
-    ? position.entryPrice * (1 + ROUND_TRIP_COST_PCT/100)
-    : position.entryPrice * (1 - ROUND_TRIP_COST_PCT/100);
-  positionLines.breakeven = candleSeries.createPriceLine({
-    price: beLevel, color: '#cccccc', lineWidth: 1,
+    ? position.entryPrice * (1 + ROUND_TRIP_COST_PCT / 100)
+    : position.entryPrice * (1 - ROUND_TRIP_COST_PCT / 100);
+  beLine = candleSeries.createPriceLine({
+    price: beLevel, color: '#888', lineWidth: 1,
     lineStyle: LightweightCharts.LineStyle.Dotted,
-    axisLabelVisible: true,
-    title: 'BE $' + beLevel.toFixed(2),
+    axisLabelVisible: true, title: 'BE',
+  });
+  // Stop line if applicable
+  if (position.stopPct != null) {
+    const sp = position.stopPct / 100;
+    const stopLevel = position.side === 'long'
+      ? position.entryPrice * (1 - sp)
+      : position.entryPrice * (1 + sp);
+    stopLine = candleSeries.createPriceLine({
+      price: stopLevel, color: '#f6c143', lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      axisLabelVisible: true, title: 'SL ' + position.stopPct + '%',
+    });
+  }
+}
+
+function clearPositionLines() {
+  if (entryLine) { candleSeries.removePriceLine(entryLine); entryLine = null; }
+  if (beLine)    { candleSeries.removePriceLine(beLine);    beLine = null; }
+  if (stopLine)  { candleSeries.removePriceLine(stopLine);  stopLine = null; }
+}
+
+function updatePositionTag() {
+  if (!position) { $posTag.style.display = 'none'; return; }
+  const p = currentPrice();
+  if (p == null) { $posTag.style.display = 'none'; return; }
+  const grossPct = position.side === 'long'
+    ? (p - position.entryPrice) / position.entryPrice * 100
+    : (position.entryPrice - p) / position.entryPrice * 100;
+  const netPct = grossPct - ROUND_TRIP_COST_PCT;
+  const dollar = accountValue * POSITION_PCT * (netPct / 100);
+  $posTag.style.display = 'block';
+  $posTag.className = position.side === 'long' ? 'long' : 'short';
+  clearChildren($posTag);
+  const sideSpan = el('span', { text: position.side.toUpperCase() + ' @ $' + position.entryPrice.toFixed(2) + '  ' });
+  const pnlSpan = el('span', { cls: netPct >= 0 ? 'pnl-pos' : 'pnl-neg',
+                                text: fmtPct(netPct) + ' (' + fmtMoney(dollar, true) + ')' });
+  $posTag.appendChild(sideSpan);
+  $posTag.appendChild(pnlSpan);
+}
+
+function renderTrades() {
+  clearChildren($tradesBody);
+  if (!trades.length) {
+    $tradesEmpty.style.display = 'block';
+    $winrate.textContent = '0/0';
+    return;
+  }
+  $tradesEmpty.style.display = 'none';
+  // Newest first
+  const wins = trades.filter(t => t.netDollar > 0).length;
+  $winrate.textContent = wins + '/' + trades.length;
+  for (let i = trades.length - 1; i >= 0; i--) {
+    const t = trades[i];
+    const tr = el('tr');
+    const sideCls = t.side === 'long' ? 'win' : 'loss';
+    tr.appendChild(el('td', { cls: 'l ' + (t.side === 'long' ? 'win' : 'loss'),
+                              text: t.side === 'long' ? 'LONG' : 'SHORT' }));
+    tr.appendChild(el('td', { cls: 'l', text: '$' + t.entryPrice.toFixed(2) }));
+    const exitText = '$' + t.exitPrice.toFixed(2) + (t.stopHit ? ' SL' : '');
+    tr.appendChild(el('td', { cls: 'l', text: exitText }));
+    const pnlCls = t.netDollar >= 0 ? 'win' : 'loss';
+    tr.appendChild(el('td', { cls: pnlCls, text: fmtPct(t.netPct) }));
+    tr.appendChild(el('td', { cls: pnlCls, text: fmtMoney(t.netDollar, true) }));
+    $tradesBody.appendChild(tr);
+  }
+}
+
+// ===================== HUD =====================
+function updateHud() {
+  const b = currentBar();
+  if (b) {
+    $hudTime.textContent = etTimeStr(b.t);
+    $hudPrice.textContent = '$' + b.c.toFixed(2);
+    // Change vs session-open (first bar)
+    const open0 = sessionBars[0] ? sessionBars[0].c : b.c;
+    const chgPct = (b.c - open0) / open0 * 100;
+    $hudChange.textContent = fmtPct(chgPct);
+    $hudChange.className = 'hud-val ' + (chgPct >= 0 ? 'good' : 'bad');
+  } else {
+    $hudTime.textContent = '--:--:-- ET';
+    $hudPrice.textContent = '$--.--';
+    $hudChange.textContent = '--%';
+    $hudChange.className = 'hud-val';
+  }
+  // Account + P&L
+  const unrealized = position ? (function() {
+    const p = currentPrice() || position.entryPrice;
+    const grossPct = position.side === 'long'
+      ? (p - position.entryPrice) / position.entryPrice * 100
+      : (position.entryPrice - p) / position.entryPrice * 100;
+    const netPct = grossPct - ROUND_TRIP_COST_PCT;
+    return accountValue * POSITION_PCT * (netPct / 100);
+  })() : 0;
+  const liveAccount = accountValue + unrealized;
+  const totalPnl = liveAccount - STARTING_ACCOUNT;
+  $hudAccount.textContent = fmtMoney(liveAccount);
+  $hudAccount.className = 'hud-val ' + (liveAccount >= STARTING_ACCOUNT ? 'good' : 'bad');
+  $hudPnl.textContent = fmtMoney(totalPnl, true);
+  $hudPnl.className = 'hud-val ' + (totalPnl >= 0 ? 'good' : 'bad');
+}
+
+// ===================== Day Log =====================
+function loadDaylog() {
+  try { return JSON.parse(localStorage.getItem(LS_DAYLOG) || '[]'); }
+  catch (e) { return []; }
+}
+function saveDaylog(arr) { localStorage.setItem(LS_DAYLOG, JSON.stringify(arr)); }
+function appendDaylog(entry) {
+  const arr = loadDaylog();
+  arr.push(entry);
+  saveDaylog(arr);
+}
+function renderDaylog() {
+  const arr = loadDaylog();
+  clearChildren($daylogBody);
+  if (!arr.length) {
+    $daylogEmpty.style.display = 'block';
+    $daylogTotalPnl.textContent = '$0.00';
+    $daylogTotalCount.textContent = '0';
+    return;
+  }
+  $daylogEmpty.style.display = 'none';
+  let totalPnl = 0;
+  for (let i = arr.length - 1; i >= 0; i--) {
+    const e = arr[i];
+    totalPnl += e.netDollar;
+    const tr = el('tr');
+    tr.appendChild(el('td', { cls: 'l', text: e.date }));
+    tr.appendChild(el('td', { cls: 'l', text: e.ticker }));
+    tr.appendChild(el('td', { text: String(e.trades) }));
+    const cls = e.netDollar >= 0 ? 'win' : 'loss';
+    tr.appendChild(el('td', { cls, text: fmtMoney(e.netDollar, true) }));
+    $daylogBody.appendChild(tr);
+  }
+  $daylogTotalPnl.textContent = fmtMoney(totalPnl, true);
+  $daylogTotalPnl.className = totalPnl >= 0 ? 'win' : 'loss';
+  $daylogTotalCount.textContent = String(arr.length);
+}
+function recordCurrentSessionToDaylog() {
+  if (!currentSession || !trades.length) return;
+  const totalNet = trades.reduce((s, t) => s + t.netDollar, 0);
+  appendDaylog({
+    date: currentSession.date,
+    ticker: currentSession.ticker,
+    trades: trades.length,
+    netDollar: totalNet,
+    recordedAt: Date.now(),
   });
 }
 
-function updateInfo() {
-  clearChildren($info);
-  if (currentBarIndex != null && bars[currentBarIndex]) {
-    const b = bars[currentBarIndex];
-    const dt = new Date(b.t * 1000);
-    const dtStr = dt.toLocaleString('en-US', { timeZone: 'America/New_York', hour12: false });
-    $info.appendChild(el('span', { cls: 'label', text: dtStr + ' ET  ' }));
-    $info.appendChild(el('span', { text: 'O ' + b.o.toFixed(2) + ' / H ' + b.h.toFixed(2) + ' / L ' + b.l.toFixed(2) + ' / C ' + b.c.toFixed(2) }));
-  }
-  if (position) {
-    const p = currentPrice();
-    const gross = position.side === 'long' ? (p - position.entryPrice) : (position.entryPrice - p);
-    const grossPct = gross / position.entryPrice * 100;
-    const cls = grossPct >= 0 ? 'pnl-pos' : 'pnl-neg';
-    const sideClass = position.side === 'long' ? 'pos-long' : 'pos-short';
-    $info.appendChild(document.createTextNode('  ·  '));
-    $info.appendChild(el('span', { cls: sideClass, text: position.side.toUpperCase() }));
-    $info.appendChild(document.createTextNode(' @ $' + position.entryPrice.toFixed(2) + '  P&L '));
-    $info.appendChild(el('span', { cls, text: (grossPct>=0?'+':'') + grossPct.toFixed(3) + '%' }));
-    $info.appendChild(document.createTextNode('  (after cost ' + (grossPct - ROUND_TRIP_COST_PCT).toFixed(3) + '%)'));
-  }
-  if (!currentBarIndex && !position) {
-    $info.appendChild(document.createTextNode('Click a bar to set the playhead cursor.'));
-  }
-}
-
-// ---------- Wiring ----------
-$ticker.addEventListener('change', () => {
-  currentTicker = $ticker.value;
-  populateWeeks();
-  if ($week.options.length > 0) {
-    currentWeek = $week.options[$week.options.length - 1].value;
-    $week.value = currentWeek;
-    loadWeek();
-  }
+// ===================== Wiring =====================
+$tickerSel.addEventListener('change', async () => {
+  currentTicker = $tickerSel.value;
+  localStorage.setItem(LS_TICKER, currentTicker);
+  await buildSessionList();
+  if (allSessions.length) await loadSession(allSessions[allSessions.length - 1]);
 });
-$week.addEventListener('change', () => { currentWeek = $week.value; loadWeek(); });
-$weekPrev.addEventListener('click', () => {
-  const idx = Array.from($week.options).findIndex(o => o.value === currentWeek);
-  if (idx > 0) { $week.value = $week.options[idx-1].value; currentWeek = $week.value; loadWeek(); }
+$sessionSel.addEventListener('change', async () => {
+  recordCurrentSessionToDaylog();
+  const s = allSessions.find(s => s.date === $sessionSel.value && s.ticker === currentTicker);
+  if (s) await loadSession(s);
 });
-$weekNext.addEventListener('click', () => {
-  const idx = Array.from($week.options).findIndex(o => o.value === currentWeek);
-  if (idx >= 0 && idx < $week.options.length - 1) { $week.value = $week.options[idx+1].value; currentWeek = $week.value; loadWeek(); }
+$btnNext.addEventListener('click', async () => {
+  recordCurrentSessionToDaylog();
+  if (!allSessions.length) return;
+  const pool = allSessions.filter(s => s.ticker === currentTicker);
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  await loadSession(pick);
 });
-$jumpEnd.addEventListener('click', () => { if (bars.length) setPlayhead(bars.length - 1); });
-$jumpStart.addEventListener('click', () => { if (bars.length) setPlayhead(0); });
-$btnBuy.addEventListener('click', () => openPosition('long'));
-$btnShort.addEventListener('click', () => openPosition('short'));
-$btnClose.addEventListener('click', closePosition);
-$btnReset.addEventListener('click', () => { clearPosition(); hideBreakeven(); });
-$btnBE.addEventListener('click', () => { if (beVisible) hideBreakeven(); else showBreakeven(); });
-$toggleVol.addEventListener('click', () => {
+$btnStep.addEventListener('click', () => step(5));
+$btnStep1m.addEventListener('click', () => step(60));
+$btnStep5m.addEventListener('click', () => step(300));
+$btnStep15m.addEventListener('click', () => step(900));
+$btnStep1h.addEventListener('click', () => step(3600));
+$btnJumpRTH.addEventListener('click', jumpToRTHOpen);
+$btnJumpEnd.addEventListener('click', jumpToEnd);
+$btnBuy.addEventListener('click', () => openPosition('long', false));
+$btnShort.addEventListener('click', () => openPosition('short', false));
+$btnClose.addEventListener('click', () => closePosition());
+$btnBuySL.addEventListener('click', () => openPosition('long', true));
+$btnShortSL.addEventListener('click', () => openPosition('short', true));
+$clearTrades.addEventListener('click', () => {
+  closePositionSilent(); trades = []; accountValue = STARTING_ACCOUNT;
+  renderTrades(); updateHud();
+});
+$btnReset.addEventListener('click', () => {
+  if (!currentSession) return;
+  closePositionSilent(); trades = []; accountValue = STARTING_ACCOUNT;
+  cursorIdx = findFirstActiveBar(sessionBars);
+  setCursor(cursorIdx); renderTrades(); updateHud();
+});
+$btnVol.addEventListener('click', () => {
   showVolume = !showVolume;
   volumeSeries.applyOptions({ visible: showVolume });
   vwapSeries.applyOptions({ visible: showVolume });
-  applyChartMargins(showVolume);
-  if (showVolume) $toggleVol.classList.add('active');
-  else $toggleVol.classList.remove('active');
-  localStorage.setItem('scalp_show_volume', showVolume ? 'true' : 'false');
+  chart.priceScale('right').applyOptions({
+    scaleMargins: { top: 0.05, bottom: showVolume ? 0.22 : 0.05 },
+  });
+  chart.priceScale('volume').applyOptions({ visible: showVolume });
+  if (showVolume) $btnVol.classList.add('active');
+  else $btnVol.classList.remove('active');
+  localStorage.setItem(LS_SHOW_VOL, showVolume ? 'true' : 'false');
+});
+$btnDaylog.addEventListener('click', () => {
+  renderDaylog();
+  $daylogDrawer.classList.add('open');
+  $drawerBackdrop.classList.add('open');
+});
+$daylogClose.addEventListener('click', () => {
+  $daylogDrawer.classList.remove('open');
+  $drawerBackdrop.classList.remove('open');
+});
+$drawerBackdrop.addEventListener('click', () => {
+  $daylogDrawer.classList.remove('open');
+  $drawerBackdrop.classList.remove('open');
+});
+$daylogReset.addEventListener('click', () => {
+  if (confirm('Clear all session history?')) {
+    localStorage.removeItem(LS_DAYLOG);
+    renderDaylog();
+  }
+});
+// Keyboard shortcuts (desktop only effectively)
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); step(5); }
+  else if (e.key === 'b' || e.key === 'B') openPosition('long', false);
+  else if (e.key === 's' || e.key === 'S') openPosition('short', false);
+  else if (e.key === 'c' || e.key === 'C') closePosition();
+  else if (e.key === 'r' || e.key === 'R') $btnReset.click();
 });
 
-// ---------- Init ----------
+// Resize chart on window resize
+window.addEventListener('resize', () => { if (chart) chart.applyOptions({}); });
+
+// ===================== Init =====================
 initChart();
 loadCatalog();
 </script>
