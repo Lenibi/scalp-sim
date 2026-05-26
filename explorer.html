@@ -1037,6 +1037,19 @@ if (typeof LightweightCharts === 'undefined') {
 // All data is embedded
 // All data is async-fetched from data/ folder.
 // 24-hour sessions sliced from weekly JSON files.
+const USD_TO_CAD = 1.36;
+let CANDLE_BUCKET_SECONDS = parseInt(
+  localStorage.getItem('scalp_sim_bucket_sec') || '600', 10
+);
+const FRICTION_BPS_BY_TICKER = {
+  MSTR: 20, COIN: 18, TSLA: 10, NVDA: 8,
+  TQQQ: 12, SOXL: 15,
+  NVDL: 25, CONL: 35, MSTU: 30, MSTX: 35, TSLL: 20,
+  SOXS: 22, SQQQ: 22,
+  MSTZ: 40, TSLZ: 40, NVDZ: 40,
+};
+const FRICTION_BPS_DEFAULT = 25;
+const COMMISSION_PER_SIDE_USD = 1.00;
 const BARS_BY_KEY = {};
 const BARS_5S_BY_KEY = {};
 
