@@ -2229,6 +2229,12 @@ function advance() {
   }
   liveTickPrice = tick.close;
   candleSeries.update(liveCandle);
+  // First-tick anchor: when chart starts empty (24h sessions with no PREV_BARS),
+  // we need to scroll to the new bar so the user can see it.
+  if (tickIdx === 0) {
+    try { chart.timeScale().scrollToRealTime(); } catch (e) {}
+    try { chart.timeScale().fitContent(); } catch (e) {}
+  }
   tickIdx++;
   // Stop loss check: compare this CURRENT tick's H/L (not liveCandle.H/L,
   // which is the cumulative high/low of the entire 10-min bucket and may
