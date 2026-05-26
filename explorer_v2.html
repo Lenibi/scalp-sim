@@ -237,7 +237,16 @@
       <span class="hud-val" id="hud-pnl">$0.00</span>
     </div>
     <span style="flex:1"></span>
-    <button id="btn-vol" class="primary active" title="Toggle volume bars">VOL</button>
+    <select id="bucket-select" title="Candle interval">
+      <option value="30">30 sec</option>
+      <option value="60" selected>1 min</option>
+      <option value="300">5 min</option>
+      <option value="600">10 min</option>
+      <option value="900">15 min</option>
+      <option value="1800">30 min</option>
+      <option value="3600">Hourly</option>
+    </select>
+    <button id="btn-vol" class="primary active" title="Toggle volume + VWAP">VOL</button>
     <button id="btn-reset" title="Reset session">RST</button>
   </div>
   <!-- Chart with floating position tag -->
@@ -325,20 +334,23 @@ const LS_DAYLOG = 'scalp_v2_daylog';
 const LS_SHOW_VOL = 'scalp_v2_show_vol';
 const LS_TICKER = 'scalp_v2_ticker';
 const LS_LAST_SESSION = 'scalp_v2_last_session';
+const LS_BUCKET = 'scalp_v2_bucket';
 
 // ===================== State =====================
 let catalog = null;
 let allSessions = [];           // [{ticker, date, week, label}]
 let currentTicker = null;
 let currentSession = null;       // {ticker, date, week}
-let weekBars = null;             // full week of bars (raw)
-let sessionBars = [];            // bars for the active 24h session
+let weekBars = null;             // full week of bars (raw 5s)
+let sessionBarsRaw = [];         // raw 5s bars for the active 24h session
+let sessionBars = [];            // aggregated bars at current bucket (visible in chart)
+let bucketSec = parseInt(localStorage.getItem(LS_BUCKET)) || 60;  // default 1min
 let etOffsetSec = 0;             // ET offset for the current week (seconds)
-let cursorIdx = 0;               // index of "current" bar in sessionBars
+let cursorIdx5s = 0;             // cursor position in sessionBarsRaw (5-sec frame)
 let position = null;             // {side: 'long'|'short', entryPrice, entryIdx, stopPct?}
 let trades = [];                 // [{side, entryPrice, exitPrice, pct, netDollar, entryTime, exitTime}]
 let accountValue = STARTING_ACCOUNT;
-let chart = null, candleSeries = null, volumeSeries = null;
+let chart = null, candleSeries = null, volumeSeries = null, vwapSeries = null;
 let entryLine = null, beLine = null, stopLine = null;
 let showVolume = localStorage.getItem(LS_SHOW_VOL) !== 'false';
 
@@ -353,6 +365,7 @@ const $hudAccount = document.getElementById('hud-account');
 const $hudPnl = document.getElementById('hud-pnl');
 const $btnVol = document.getElementById('btn-vol');
 const $btnReset = document.getElementById('btn-reset');
+const $bucketSel = document.getElementById('bucket-select');
 const $btnStep = document.getElementById('btn-step');
 const $btnStep1m = document.getElementById('btn-step-1m');
 const $btnStep5m = document.getElementById('btn-step-5m');
@@ -471,9 +484,39 @@ function initChart() {
     scaleMargins: { top: 0.82, bottom: 0 }, borderColor: '#444',
     visible: showVolume,
   });
+  vwapSeries = chart.addLineSeries({
+    color: '#f6c143', lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    priceLineVisible: false, crosshairMarkerVisible: false,
+    lastValueVisible: true, title: 'VWAP',
+  });
   volumeSeries.applyOptions({ visible: showVolume });
+  vwapSeries.applyOptions({ visible: showVolume });
   if (showVolume) $btnVol.classList.add('active');
   else $btnVol.classList.remove('active');
+}
+
+// Aggregate raw 5-sec bars into N-second buckets.
+function aggregateBars(raw5s, secs) {
+  if (secs <= 5) {
+    return raw5s.map(b => ({ t: b.t, o: b.o, h: b.h, l: b.l, c: b.c, v: b.v }));
+  }
+  const out = [];
+  let cur = null;
+  for (const b of raw5s) {
+    const bucket = Math.floor(b.t / secs) * secs;
+    if (!cur || cur.t !== bucket) {
+      if (cur) out.push(cur);
+      cur = { t: bucket, o: b.o, h: b.h, l: b.l, c: b.c, v: b.v };
+    } else {
+      cur.h = Math.max(cur.h, b.h);
+      cur.l = Math.min(cur.l, b.l);
+      cur.c = b.c;
+      cur.v += b.v;
+    }
+  }
+  if (cur) out.push(cur);
+  return out;
 }
 
 // ===================== Data load =====================
@@ -553,22 +596,17 @@ async function loadSession(session) {
     weekBars = await resp.json();
     if (!weekBars.length) { $status.textContent = 'Week file empty'; return; }
     etOffsetSec = computeETOffset(weekBars[0].t);
-    // Slice the session: bars from prev-day 20:00 ET to session-date 20:00 ET.
-    // For Monday: from session-date 04:00 ET (no Sunday data).
-    sessionBars = sliceSessionBars(weekBars, session.date);
-    if (!sessionBars.length) {
+    // Slice the session at raw 5-sec resolution, then aggregate to current bucket.
+    sessionBarsRaw = sliceSessionBars(weekBars, session.date);
+    if (!sessionBarsRaw.length) {
       $status.textContent = 'No bars for ' + session.label;
       return;
     }
-    candleSeries.setData(sessionBars.map(b => ({
-      time: b.t, open: b.o, high: b.h, low: b.l, close: b.c,
-    })));
-    volumeSeries.setData(computeVolumeData(sessionBars));
-    // Start cursor at the earliest bar with volume>0 (so user sees something)
-    cursorIdx = findFirstActiveBar(sessionBars);
-    setCursor(cursorIdx);
+    // Start cursor at the earliest 5-sec bar with volume>0
+    cursorIdx5s = findFirstActiveBar(sessionBarsRaw);
+    refreshChart();
     chart.timeScale().fitContent();
-    $status.textContent = session.label + ' loaded -- ' + sessionBars.length + ' bars';
+    $status.textContent = session.label + ' loaded -- ' + sessionBarsRaw.length + ' raw bars (' + bucketSec + 's bucket)';
   } catch (e) {
     $status.textContent = 'Load failed: ' + e.message;
   }
@@ -662,37 +700,46 @@ function sessionKeyForBar(unixSec) {
 }
 
 // ===================== Time stepping =====================
-function setCursor(idx) {
-  cursorIdx = Math.max(0, Math.min(sessionBars.length - 1, idx));
-  // Hide bars after cursor: lightweight-charts shows everything, but we control time-scale visible range
-  // Approach: setVisibleLogicalRange to [0, cursorIdx + buffer]
-  const visBars = 200; // last 200 bars before cursor
-  const from = Math.max(0, cursorIdx - visBars);
-  const to = cursorIdx + 5;  // small buffer
-  chart.timeScale().setVisibleLogicalRange({ from, to });
+// Aggregate the visible portion of sessionBarsRaw (up to cursorIdx5s) into bucketSec bars,
+// then push to the chart series. The last bar is "in-progress" -- it updates as cursor advances.
+function refreshChart() {
+  if (!sessionBarsRaw.length) return;
+  cursorIdx5s = Math.max(0, Math.min(sessionBarsRaw.length - 1, cursorIdx5s));
+  const visible = sessionBarsRaw.slice(0, cursorIdx5s + 1);
+  sessionBars = aggregateBars(visible, bucketSec);
+  candleSeries.setData(sessionBars.map(b => ({
+    time: b.t, open: b.o, high: b.h, low: b.l, close: b.c,
+  })));
+  volumeSeries.setData(computeVolumeData(sessionBars));
+  vwapSeries.setData(computeVWAP(sessionBars));
+  // Keep view focused on the cursor: scroll so the last bar is at the right edge.
+  const visN = Math.max(50, Math.round(1200 / bucketSec));   // ~20 minutes of bars visible
+  const lastIdx = sessionBars.length - 1;
+  const from = Math.max(0, lastIdx - visN);
+  const to = lastIdx + 5;
+  try { chart.timeScale().setVisibleLogicalRange({ from, to }); } catch (e) {}
   updateHud();
   updatePositionTag();
 }
 
 function step(seconds) {
-  // Advance cursor by N seconds. Each bar is 5 sec, so step by N/5 indices.
-  const idxStep = Math.max(1, Math.round(seconds / 5));
-  // Check stop loss before advancing - simulate the move bar by bar
+  const stepCount = Math.max(1, Math.round(seconds / 5));
+  // Check stop loss tick-by-tick at 5-sec resolution
   if (position && position.stopPct != null) {
-    for (let i = 1; i <= idxStep; i++) {
-      const probeIdx = cursorIdx + i;
-      if (probeIdx >= sessionBars.length) break;
-      const probeBar = sessionBars[probeIdx];
-      const stopHit = checkStopHit(probeBar);
+    for (let i = 1; i <= stepCount; i++) {
+      const probeIdx = cursorIdx5s + i;
+      if (probeIdx >= sessionBarsRaw.length) break;
+      const stopHit = checkStopHit(sessionBarsRaw[probeIdx]);
       if (stopHit) {
-        // Stop triggered. Close at the stop price on this bar.
-        cursorIdx = probeIdx;
+        cursorIdx5s = probeIdx;
+        refreshChart();
         closePosition(stopHit);
         return;
       }
     }
   }
-  setCursor(cursorIdx + idxStep);
+  cursorIdx5s += stepCount;
+  refreshChart();
 }
 
 function checkStopHit(bar) {
@@ -709,29 +756,29 @@ function checkStopHit(bar) {
 }
 
 function jumpToRTHOpen() {
-  // Jump cursor to first bar of session-date at 09:30:00 ET
   if (!currentSession) return;
-  for (let i = 0; i < sessionBars.length; i++) {
-    if (etDateOf(sessionBars[i].t) === currentSession.date) {
-      const [h, m] = etHourMinSec(sessionBars[i].t);
-      if (h === 9 && m >= 30) { setCursor(i); return; }
-      if (h > 9) { setCursor(i); return; }
+  for (let i = 0; i < sessionBarsRaw.length; i++) {
+    if (etDateOf(sessionBarsRaw[i].t) === currentSession.date) {
+      const [h, m] = etHourMinSec(sessionBarsRaw[i].t);
+      if ((h === 9 && m >= 30) || h > 9) {
+        cursorIdx5s = i; refreshChart(); return;
+      }
     }
   }
 }
 
-function jumpToEnd() { setCursor(sessionBars.length - 1); }
+function jumpToEnd() { cursorIdx5s = sessionBarsRaw.length - 1; refreshChart(); }
 
 // ===================== Position / trades =====================
-function currentBar() { return sessionBars[cursorIdx]; }
+function currentBar() { return sessionBarsRaw[cursorIdx5s]; }
 function currentPrice() { return currentBar() ? currentBar().c : null; }
 
 function openPosition(side, withStop = false) {
-  if (position) return;  // already in a trade
+  if (position) return;
   const p = currentPrice();
   if (p == null) return;
   position = {
-    side, entryPrice: p, entryIdx: cursorIdx, entryTime: currentBar().t,
+    side, entryPrice: p, entryIdx: cursorIdx5s, entryTime: currentBar().t,
     stopPct: withStop ? parseFloat($stopPct.value) || 1.0 : null,
   };
   drawPositionLines();
@@ -976,8 +1023,14 @@ $clearTrades.addEventListener('click', () => {
 $btnReset.addEventListener('click', () => {
   if (!currentSession) return;
   closePositionSilent(); trades = []; accountValue = STARTING_ACCOUNT;
-  cursorIdx = findFirstActiveBar(sessionBars);
-  setCursor(cursorIdx); renderTrades(); updateHud();
+  cursorIdx5s = findFirstActiveBar(sessionBarsRaw);
+  refreshChart(); renderTrades(); updateHud();
+});
+$bucketSel.value = String(bucketSec);
+$bucketSel.addEventListener('change', () => {
+  bucketSec = parseInt($bucketSel.value) || 60;
+  localStorage.setItem(LS_BUCKET, String(bucketSec));
+  refreshChart();
 });
 $btnVol.addEventListener('click', () => {
   showVolume = !showVolume;
