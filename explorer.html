@@ -824,6 +824,20 @@
         <button id="chart-zoom-in" title="Zoom in (fewer bars visible, same as scroll wheel up)" style="background:#1a1a1a;color:#cccccc;border:1px solid #444;border-radius:3px;width:24px;height:24px;font-size:14px;font-weight:700;cursor:pointer;line-height:1;padding:0;margin:0">&plus;</button>
         <button id="chart-zoom-out" title="Zoom out (more bars visible, same as scroll wheel down)" style="background:#1a1a1a;color:#cccccc;border:1px solid #444;border-radius:3px;width:24px;height:24px;font-size:14px;font-weight:700;cursor:pointer;line-height:1;padding:0;margin:0">&minus;</button>
       </span>
+      <span class="vwap-toggles" style="display:inline-flex;gap:8px;align-items:center;padding:0 8px;border-left:1px solid #333;font-size:11px;color:#aaa">
+        <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer" title="Toggle VWAP +2sigma upper band">
+          <input type="checkbox" id="cb-upper" style="accent-color:#66aaff;cursor:pointer">
+          <span style="color:#66aaff">Upper</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer" title="Toggle VWAP line">
+          <input type="checkbox" id="cb-vwap" style="accent-color:#f6c143;cursor:pointer">
+          <span style="color:#f6c143">VWAP</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer" title="Toggle VWAP -2sigma lower band">
+          <input type="checkbox" id="cb-lower" style="accent-color:#ff77bb;cursor:pointer">
+          <span style="color:#ff77bb">Lower</span>
+        </label>
+      </span>
       <span style="flex:1"></span>
       <span id="ctrl-time" style="font-family:Consolas,monospace;font-size:28px;font-weight:800;color:#f6c143;padding:0 12px;letter-spacing:0.05em;line-height:1" title="Current simulated time">--:--:-- --</span>
       <span id="ctb-account" style="font-family:Consolas,monospace;font-size:18px;font-weight:700;color:#ccc;padding:0 4px;line-height:1" title="Account value (starting + realized + unrealized P&amp;L)">$10,000</span>
@@ -1643,6 +1657,54 @@ const vwapSeries = chart.addLineSeries({
   priceLineVisible: false, crosshairMarkerVisible: false,
   lastValueVisible: true, title: 'VWAP',
 });
+// VWAP +/-2 std dev bands
+const vwapUpperSeries = chart.addLineSeries({
+  color: '#66aaff', lineWidth: 1,
+  lineStyle: LightweightCharts.LineStyle.Solid,
+  priceLineVisible: false, crosshairMarkerVisible: false,
+  lastValueVisible: true, title: 'Upper',
+});
+const vwapLowerSeries = chart.addLineSeries({
+  color: '#ff77bb', lineWidth: 1,
+  lineStyle: LightweightCharts.LineStyle.Solid,
+  priceLineVisible: false, crosshairMarkerVisible: false,
+  lastValueVisible: true, title: 'Lower',
+});
+// Restore visibility from localStorage (default all on)
+const _showUpper = localStorage.getItem('scalp_show_upper') !== 'false';
+const _showVWAP = localStorage.getItem('scalp_show_vwap') !== 'false';
+const _showLower = localStorage.getItem('scalp_show_lower') !== 'false';
+vwapUpperSeries.applyOptions({ visible: _showUpper });
+vwapSeries.applyOptions({ visible: _showVWAP });
+vwapLowerSeries.applyOptions({ visible: _showLower });
+
+// Wire up the 3 checkboxes
+(function() {
+  const cbUpper = document.getElementById('cb-upper');
+  const cbVwap = document.getElementById('cb-vwap');
+  const cbLower = document.getElementById('cb-lower');
+  if (cbUpper) {
+    cbUpper.checked = _showUpper;
+    cbUpper.addEventListener('change', () => {
+      vwapUpperSeries.applyOptions({ visible: cbUpper.checked });
+      localStorage.setItem('scalp_show_upper', cbUpper.checked ? 'true' : 'false');
+    });
+  }
+  if (cbVwap) {
+    cbVwap.checked = _showVWAP;
+    cbVwap.addEventListener('change', () => {
+      vwapSeries.applyOptions({ visible: cbVwap.checked });
+      localStorage.setItem('scalp_show_vwap', cbVwap.checked ? 'true' : 'false');
+    });
+  }
+  if (cbLower) {
+    cbLower.checked = _showLower;
+    cbLower.addEventListener('change', () => {
+      vwapLowerSeries.applyOptions({ visible: cbLower.checked });
+      localStorage.setItem('scalp_show_lower', cbLower.checked ? 'true' : 'false');
+    });
+  }
+})();
 
 // Helpers to compute volume bar colors and VWAP for the current session
 function _computeVolumeData(bars) {
@@ -1663,25 +1725,30 @@ function _computeVolumeData(bars) {
   }
   return out;
 }
-function _computeVWAP(bars) {
-  // Bars must have v (volume) and ET hhmm in .hhmm; reset at 09:30
-  const out = [];
-  let cumN = 0, cumD = 0, lastDay = null;
+function _computeVWAPAndBands(bars) {
+  // Returns { vwap: [...], upper: [...], lower: [...] }. Resets at 09:30 ET.
+  const vwap = [], upper = [], lower = [];
+  let cumN = 0, cumD = 0, cumP2v = 0, lastDay = null;
   for (const b of bars) {
-    const day = (b.hhmm || '').slice(0, 0); // hhmm only -- use date if available via b.time
-    // Use ET hour from b.hhmm: reset at 9:30 -> approximated by start-of-day boundary inside b.hhmm
-    // Cleaner: use b.time and convert
     const d = new Date((b.time + (window._etOffsetForVWAP || 0)) * 1000);
     const sessionKey = d.getUTCFullYear() + '-' + d.getUTCMonth() + '-' + d.getUTCDate() + (d.getUTCHours() < 9 || (d.getUTCHours() === 9 && d.getUTCMinutes() < 30) ? '_pre' : '');
-    if (sessionKey !== lastDay) { cumN = 0; cumD = 0; lastDay = sessionKey; }
+    if (sessionKey !== lastDay) { cumN = 0; cumD = 0; cumP2v = 0; lastDay = sessionKey; }
     if ((b.v || 0) > 0) {
       const typical = (b.high + b.low + b.close) / 3;
       cumN += typical * b.v;
       cumD += b.v;
+      cumP2v += typical * typical * b.v;
     }
-    if (cumD > 0) out.push({ time: b.time, value: cumN / cumD });
+    if (cumD > 0) {
+      const v = cumN / cumD;
+      const variance = Math.max(0, cumP2v / cumD - v * v);
+      const sigma = Math.sqrt(variance);
+      vwap.push({ time: b.time, value: v });
+      upper.push({ time: b.time, value: v + 2 * sigma });
+      lower.push({ time: b.time, value: v - 2 * sigma });
+    }
   }
-  return out;
+  return { vwap, upper, lower };
 }
 function _refreshAuxSeries(bars) {
   if (bars && bars.length) {
@@ -1690,10 +1757,15 @@ function _refreshAuxSeries(bars) {
   if (!bars || !bars.length) {
     volumeSeries.setData([]);
     vwapSeries.setData([]);
+    vwapUpperSeries.setData([]);
+    vwapLowerSeries.setData([]);
     return;
   }
   volumeSeries.setData(_computeVolumeData(bars));
-  vwapSeries.setData(_computeVWAP(bars));
+  const vb = _computeVWAPAndBands(bars);
+  vwapSeries.setData(vb.vwap);
+  vwapUpperSeries.setData(vb.upper);
+  vwapLowerSeries.setData(vb.lower);
 }
 
 // Hook candleSeries.setData and update to also refresh aux series
