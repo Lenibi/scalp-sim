@@ -1098,19 +1098,18 @@ function _aggregateTo1Min(bars5s) {
   return out;
 }
 function _loadSessionBars(ticker, date) {
-  const session = CATALOG.find(s => s.ticker === ticker && s.date === date);
-  if (!session) return;
   const key = ticker + '_' + date;
-  if (BARS_5S_BY_KEY[key]) return;
-  const weekData = _syncFetchJson('data/' + ticker + '_week_' + session.week + '.json');
-  const off = _etOffsetSec(weekData[0].t);
-  const sliced = _slice24h(weekData, date, off);
-  const enriched = sliced.map(b => ({
-    t: b.t, o: b.o, h: b.h, l: b.l, c: b.c, v: b.v || 0,
-    m: _etHHMM(b.t, off),
-  }));
-  BARS_5S_BY_KEY[key] = enriched;
-  BARS_BY_KEY[key] = _aggregateTo1Min(enriched);
+  if (BARS_BY_KEY[key]) return;
+  try {
+    // Fast path: per-day 1-min file (~100 KB, loads in <1 sec on mobile)
+    const dayData = _syncFetchJson('data/days_1min/' + ticker + '_' + date + '.json');
+    BARS_BY_KEY[key] = dayData;
+    BARS_5S_BY_KEY[key] = dayData;  // same data used for "5-sec" mode (each tick = 1-min)
+  } catch (e) {
+    console.warn('Day file missing for ' + key + ':', e.message);
+    BARS_BY_KEY[key] = [];
+    BARS_5S_BY_KEY[key] = [];
+  }
 }
 
 // Catalog (small metadata file)
