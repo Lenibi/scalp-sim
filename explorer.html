@@ -878,6 +878,7 @@
     <div class="ctrl-row tier-2">
       <button id="btn-step-1m" title="Jump forward 1 minute" style="display:none">+1m</button>
       <button id="btn-step-5m" title="Jump forward 5 minutes" style="display:none">+5m</button>
+      <button id="btn-preview-be" style="background:#2f4858;color:#88ddff;border:1px solid #4a8aa6;font-weight:700" title="Show buy/sell breakeven lines for 2 sec">BE</button>
       <button id="btn-buy-sl" class="success" style="opacity:0.85" title="Buy long and auto-close if price drops by stop %">BUY + STOP</button>
       <button id="btn-sell-sl" class="danger" style="opacity:0.85" title="Short and auto-close if price rises by stop %">SHORT + STOP</button>
       <label style="display:flex;align-items:center;gap:6px;color:#ccc;font-size:12px">
@@ -2909,6 +2910,42 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 document.getElementById('btn-buy').addEventListener('click', () => openPosition('long'));
 document.getElementById('btn-sell').addEventListener('click', () => openPosition('short'));
 document.getElementById('btn-close').addEventListener('click', closePosition);
+
+// BE preview button: show buy + sell breakeven lines for 2 seconds, then hide
+let _previewLines = [];
+let _previewTimer = null;
+document.getElementById('btn-preview-be').addEventListener('click', () => {
+  // Clear any existing preview first
+  _previewLines.forEach(l => { try { candleSeries.removePriceLine(l); } catch (e) {} });
+  _previewLines = [];
+  if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null; }
+  // Current price reference
+  const price = (typeof liveTickPrice === 'number' && liveTickPrice > 0)
+    ? liveTickPrice
+    : (TODAY_TICKS[tickIdx] && TODAY_TICKS[tickIdx].close);
+  if (!price) return;
+  const friction = frictionBps(TICKER) / 10000;
+  const buyBE = price * (1 + friction);
+  const sellBE = price * (1 - friction);
+  const buyLine = candleSeries.createPriceLine({
+    price: buyBE, color: '#22cc55', lineWidth: 2,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    axisLabelVisible: true,
+    title: 'BUY BE',
+  });
+  const sellLine = candleSeries.createPriceLine({
+    price: sellBE, color: '#cc2222', lineWidth: 2,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    axisLabelVisible: true,
+    title: 'SELL BE',
+  });
+  _previewLines.push(buyLine, sellLine);
+  _previewTimer = setTimeout(() => {
+    _previewLines.forEach(l => { try { candleSeries.removePriceLine(l); } catch (e) {} });
+    _previewLines = [];
+    _previewTimer = null;
+  }, 2000);
+});
 function _getStopPct() {
   const raw = parseFloat(document.getElementById('stop-pct').value);
   return (isFinite(raw) && raw > 0) ? raw : null;
