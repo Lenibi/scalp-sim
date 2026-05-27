@@ -1718,25 +1718,27 @@ chart.priceScale('volume').applyOptions({
 chart.priceScale('right').applyOptions({
   scaleMargins: { top: 0.05, bottom: 0.22 },
 });
-// VWAP line (yellow dashed, resets at 9:30 ET daily)
+// VWAP line (yellow dashed, resets at 9:30 ET daily).
+// lastValueVisible:false strips the right-axis "VWAP / Upper / Lower"
+// price tags (lines themselves remain on the chart, just no axis label).
 const vwapSeries = chart.addLineSeries({
   color: '#f6c143', lineWidth: 1,
   lineStyle: LightweightCharts.LineStyle.Dashed,
   priceLineVisible: false, crosshairMarkerVisible: false,
-  lastValueVisible: true, title: 'VWAP',
+  lastValueVisible: false,
 });
 // VWAP +/-2 std dev bands
 const vwapUpperSeries = chart.addLineSeries({
   color: '#66aaff', lineWidth: 1,
   lineStyle: LightweightCharts.LineStyle.Solid,
   priceLineVisible: false, crosshairMarkerVisible: false,
-  lastValueVisible: true, title: 'Upper',
+  lastValueVisible: false,
 });
 const vwapLowerSeries = chart.addLineSeries({
   color: '#ff77bb', lineWidth: 1,
   lineStyle: LightweightCharts.LineStyle.Solid,
   priceLineVisible: false, crosshairMarkerVisible: false,
-  lastValueVisible: true, title: 'Lower',
+  lastValueVisible: false,
 });
 // Restore visibility from localStorage (default all on)
 const _showUpper = localStorage.getItem('scalp_show_upper') !== 'false';
