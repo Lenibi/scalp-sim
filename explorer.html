@@ -1178,6 +1178,12 @@ const LS_KEYS = {
   stats: 'scalp_sim_stats',
   dayLog: 'scalp_sim_day_log',
 };
+
+// FORCE 5-SEC MODE ON before anything reads it. The 1-min mode path makes
+// each "tick" 60 seconds, so at sub-60s bucket sizes (30s, etc.) each +5s
+// press skips a candle. This MUST run before pickSession() and the
+// FIVE_SEC_MODE const below.
+try { localStorage.setItem(LS_KEYS.fivesecOnly, '1'); } catch (e) {}
 const SS_KEYS = {
   forceSession: 'scalp_sim_force_session',
   justWrapped: 'scalp_sim_just_wrapped',
@@ -3163,9 +3169,10 @@ setTimeout(() => {
   } catch (e) { console.warn('Auto +5s on load failed:', e); }
 }, 250);
 
-// FORCE 5-SEC MODE ON unconditionally (toggle UI hidden per user pref).
+// Mirror to UI checkboxes (the source-of-truth localStorage value was already
+// forced to '1' at the very top of this script so the FIVE_SEC_MODE const
+// would read it correctly).
 try {
-  localStorage.setItem('scalp_sim_fivesec_only', '1');
   const cb1 = document.getElementById('fivesec-toggle');
   const cb2 = document.getElementById('fivesec-toggle-mobile');
   if (cb1) cb1.checked = true;
