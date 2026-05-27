@@ -1031,6 +1031,16 @@
           <span>5-sec mode</span>
           <input type="checkbox" id="fivesec-toggle-mobile" checked>
         </label>
+        <label class="settings-row">
+          <span>Session starts</span>
+          <select id="session-start-select">
+            <option value="0">12 AM (midnight)</option>
+            <option value="4">4 AM (pre-market)</option>
+            <option value="9.5">9:30 AM (market open)</option>
+            <option value="16">4 PM prev day (AH start)</option>
+            <option value="20" selected>8 PM prev day (overnight start)</option>
+          </select>
+        </label>
       </div>
       <div class="settings-section">
         <button id="btn-newrandom-settings" class="primary" style="width:100%;padding:10px">NEW RANDOM &#x21bb;</button>
@@ -1195,6 +1205,7 @@ const LS_KEYS = {
   sequential: 'scalp_sim_sequential',
   stats: 'scalp_sim_stats',
   dayLog: 'scalp_sim_day_log',
+  sessionStart: 'scalp_sim_session_start_hour',  // ET hour where the session begins (0|4|16|20)
 };
 
 // FORCE 5-SEC MODE ON before anything reads it. The 1-min mode path makes
@@ -1266,8 +1277,42 @@ const PREV_DATE = SESSION.prev_date;
 // Context = all prior trading days (TWS-style continuous history)
 const CONTEXT_DATES = SESSION.context_dates || [PREV_DATE];
 const CONTEXT_BARS_RAW = CONTEXT_DATES.flatMap(d => BARS_BY_KEY[TICKER + '_' + d] || []);
+
+// Session-start setting: ET wall-clock hour where the session window begins.
+// Stored as a float so 9:30 AM is 9.5. Values <12 are interpreted as today;
+// values >=12 are previous day (so the session "rolls back" into the night
+// before).
+//   0    = midnight today
+//   4    = pre-market today
+//   9.5  = market open (RTH start)
+//   16   = 4 PM previous day  (AH start)
+//   20   = 8 PM previous day  (overnight start, DEFAULT)
+const _sessionStartRaw = localStorage.getItem(LS_KEYS.sessionStart);
+const SESSION_START_HOUR = _sessionStartRaw === null ? 20 : parseFloat(_sessionStartRaw);
+const SESSION_START_MIN  = Math.round(SESSION_START_HOUR * 60);  // ET minutes-of-day
+
+function _minuteOfBar(b) {
+  const d = new Date(b.t * 1000);          // fake-UTC: UTC h/m == ET wall clock
+  return d.getUTCHours() * 60 + d.getUTCMinutes();
+}
+function _todayWithSessionStart(ticker, date, prevDate, fiveSec) {
+  const todayKey = ticker + '_' + date;
+  const prevKey = ticker + '_' + prevDate;
+  const store = fiveSec ? BARS_5S_BY_KEY : BARS_BY_KEY;
+  const today = store[todayKey] || [];
+  // Session starts within TODAY's calendar day: drop bars before that minute.
+  if (SESSION_START_HOUR < 12) {
+    return today.filter(b => _minuteOfBar(b) >= SESSION_START_MIN);
+  }
+  // Session starts at SESSION_START_HOUR of YESTERDAY -> prepend yesterday's
+  // tail (bars whose ET minute-of-day >= SESSION_START_MIN) to today's bars.
+  const prev = (prevDate && store[prevKey]) ? store[prevKey] : [];
+  const prevTail = prev.filter(b => _minuteOfBar(b) >= SESSION_START_MIN);
+  return prevTail.concat(today);
+}
+
 const PREV_BARS_RAW = CONTEXT_BARS_RAW;
-const TODAY_BARS_RAW = BARS_BY_KEY[TICKER + '_' + DATE] || [];
+const TODAY_BARS_RAW = _todayWithSessionStart(TICKER, DATE, PREV_DATE, false);
 
 function expandBars(raw) {
   return raw.map(b => ({
@@ -1307,7 +1352,7 @@ function aggregateBars(bars, bucketSec) {
 const _fivesecToggleRaw = localStorage.getItem(LS_KEYS.fivesecOnly);
 const _fivesecToggleOn = _fivesecToggleRaw === null ? true : (_fivesecToggleRaw === '1');
 const FIVE_SEC_MODE = _fivesecToggleOn && !!SESSION.has_5sec;
-const TODAY_5S_BARS = expandBars(BARS_5S_BY_KEY[TICKER + '_' + DATE] || []);
+const TODAY_5S_BARS = expandBars(_todayWithSessionStart(TICKER, DATE, PREV_DATE, true));
 const TODAY_1M_BARS = expandBars(TODAY_BARS_RAW);
 const TODAY_TICKS = FIVE_SEC_MODE ? TODAY_5S_BARS : TODAY_1M_BARS;
 
@@ -1404,6 +1449,17 @@ document.getElementById('fivesec-toggle-mobile').addEventListener('change', e =>
 document.getElementById('sequential-toggle').addEventListener('change', e => {
   localStorage.setItem(LS_KEYS.sequential, e.target.checked ? '1' : '0');
 });
+
+// Session-start dropdown -- persist + reload (affects how today's bar
+// window is stitched together at module-init time).
+const _sessionStartSel = document.getElementById('session-start-select');
+if (_sessionStartSel) {
+  _sessionStartSel.value = String(SESSION_START_HOUR);
+  _sessionStartSel.addEventListener('change', e => {
+    localStorage.setItem(LS_KEYS.sessionStart, e.target.value);
+    window.location.reload();
+  });
+}
 
 // Ticker filter -- desktop + mobile mirrors. Persist + reload (since the
 // catalog filter affects which session pickSession picks). Also refreshes
