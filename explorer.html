@@ -561,20 +561,32 @@
     line-height: 1.4;
     display: none;
   }
-  /* Session progress bar: 3px sliver pinned to the top of the chart area,
-     filling left-to-right as the trading day progresses. Yellow at 9:30 ->
-     orange at midday -> red near 4pm. Glanceable, doesn't touch candles. */
+  /* Session progress bar: row of 4 separate phase loaders that fill
+     independently as the live tick crosses each phase (pre-market, RTH,
+     after-hours, overnight). Widths are proportional to each phase's
+     share of the loaded session. */
   #session-progress {
     position: absolute;
     top: 66px; left: 0; right: 0;        /* below chart-title-bar (44) + ticker-header (22) */
     height: 7px;
-    background: rgba(255, 255, 255, 0.08);
+    display: flex;
     z-index: 10;
     pointer-events: none;
+    background: transparent;
   }
-  #session-progress-fill {
-    height: 100%; width: 0%;
-    background: linear-gradient(to right, #ffffff 0%, #93c5fd 50%, #2563eb 100%);
+  .zone-seg {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    /* width set dynamically per-phase */
+  }
+  .zone-seg + .zone-seg {
+    border-left: 1px solid rgba(0, 0, 0, 0.55); /* hairline separator */
+  }
+  .zone-seg-fill {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 0%;
     transition: width 0.25s ease-out;
   }
   /* End-of-day session summary: huge centered $ amount over the chart. */
@@ -875,7 +887,7 @@
       <span id="th-pos-pnl" style="display:none;padding:2px 10px;border-radius:3px;font-size:14px;font-weight:700"></span>
     </div>
     <div id="chart"></div>
-    <div id="session-progress"><div id="session-progress-fill"></div></div>
+    <div id="session-progress"><!-- phase loaders injected by JS --></div>
     <div id="pos-gradient"></div>
     <div id="eod-summary">
       <button class="close-x" id="eod-close-x" title="Dismiss">&times;</button>
@@ -1986,20 +1998,93 @@ function showEodSummary() {
   box.style.display = 'block';
 }
 
-// Fill the session-progress bar based on % of trading day elapsed.
-// Driven by the live tick's time, so it advances smoothly as advance() runs.
+// Phase loaders: 4 independent progress bars (pre / RTH / AH / overnight),
+// each filling left-to-right as the live tick crosses through that phase.
+// `bg` = dim "empty" color, `fg` = saturated "filled" color.
+const SESSION_PHASES = [
+  { from: 0,           to: 9 * 60 + 30,  bg: '#0f172a', fg: '#64748b' }, // pre/overnight (slate)
+  { from: 9 * 60 + 30, to: 16 * 60,      bg: '#052e16', fg: '#22c55e' }, // RTH (green)
+  { from: 16 * 60,     to: 20 * 60,      bg: '#431407', fg: '#f97316' }, // AH (orange)
+  { from: 20 * 60,     to: 24 * 60,      bg: '#1e1b4b', fg: '#818cf8' }, // overnight (indigo)
+];
+
+// One per visible segment. Rebuilt when the loaded session changes.
+let _phaseSegments = null;
+let _phasesKey = '';
+
+function buildPhaseSegments(sessionStart, sessionEnd) {
+  const bar = document.getElementById('session-progress');
+  if (!bar) return;
+  while (bar.firstChild) bar.removeChild(bar.firstChild);
+  _phaseSegments = [];
+  const totalSec = sessionEnd - sessionStart;
+  const totalMin = totalSec / 60;
+  if (totalMin <= 0) return;
+
+  // ET minutes-of-day at session start (bar timestamps are fake-UTC = ET).
+  const startD = new Date(sessionStart * 1000);
+  const startMin = startD.getUTCHours() * 60 + startD.getUTCMinutes();
+
+  // For each phase, find every occurrence (across the days the session
+  // spans) whose [from, to] overlaps the session window, and emit a segment
+  // clipped to that window.
+  const segs = [];
+  const daysSpanned = Math.ceil(totalMin / 1440) + 1;
+  for (let day = 0; day < daysSpanned; day++) {
+    for (const p of SESSION_PHASES) {
+      const offFrom = (day * 1440 + p.from) - startMin;
+      const offTo   = (day * 1440 + p.to)   - startMin;
+      const clipFrom = Math.max(0, offFrom);
+      const clipTo   = Math.min(totalMin, offTo);
+      if (clipTo <= clipFrom) continue;
+      segs.push({ startMin: clipFrom, endMin: clipTo, bg: p.bg, fg: p.fg });
+    }
+  }
+  segs.sort((a, b) => a.startMin - b.startMin);
+
+  for (const s of segs) {
+    const widthPct = ((s.endMin - s.startMin) / totalMin) * 100;
+    const segEl = document.createElement('div');
+    segEl.className = 'zone-seg';
+    segEl.style.width = widthPct.toFixed(3) + '%';
+    segEl.style.background = s.bg;
+    const fillEl = document.createElement('div');
+    fillEl.className = 'zone-seg-fill';
+    fillEl.style.background = s.fg;
+    segEl.appendChild(fillEl);
+    bar.appendChild(segEl);
+    _phaseSegments.push({ startMin: s.startMin, endMin: s.endMin, fillEl });
+  }
+}
+
+function updatePhaseFills(elapsedMin) {
+  if (!_phaseSegments) return;
+  for (const s of _phaseSegments) {
+    const dur = s.endMin - s.startMin;
+    let pct;
+    if (elapsedMin <= s.startMin)      pct = 0;
+    else if (elapsedMin >= s.endMin)   pct = 100;
+    else                               pct = ((elapsedMin - s.startMin) / dur) * 100;
+    s.fillEl.style.width = pct.toFixed(2) + '%';
+  }
+}
+
+// Drive the 4 phase loaders from the live tick's time. Builds segments
+// lazily and rebuilds when the loaded session changes.
 function updateSessionProgress() {
-  const fill = document.getElementById('session-progress-fill');
-  if (!fill || TODAY_BARS.length === 0) return;
+  if (TODAY_BARS.length === 0) return;
   const sessionStart = TODAY_BARS[0].time;
   const sessionEnd = TODAY_BARS[TODAY_BARS.length - 1].time + CANDLE_BUCKET_SECONDS;
-  const totalSec = sessionEnd - sessionStart;
+  const key = sessionStart + ':' + sessionEnd;
+  if (key !== _phasesKey) {
+    buildPhaseSegments(sessionStart, sessionEnd);
+    _phasesKey = key;
+  }
   let elapsedSec = 0;
   if (tickIdx > 0 && tickIdx <= TODAY_TICKS.length) {
     elapsedSec = TODAY_TICKS[tickIdx - 1].time - sessionStart;
   }
-  const pct = Math.max(0, Math.min(100, (elapsedSec / totalSec) * 100));
-  fill.style.width = pct.toFixed(2) + '%';
+  updatePhaseFills(elapsedSec / 60);
 }
 
 // Render vertical dashed lines at each day boundary (where one bar's UTC date
@@ -2426,8 +2511,10 @@ function reset() {
   liveTickPrice = null;
   const _clk0 = document.getElementById('ctrl-time');
   if (_clk0) _clk0.textContent = '--:--:-- --';
-  const _spf = document.getElementById('session-progress-fill');
-  if (_spf) _spf.style.width = '0%';
+  // Zero out all phase loaders on reset.
+  if (_phaseSegments) {
+    for (const s of _phaseSegments) s.fillEl.style.width = '0%';
+  }
   const _eod = document.getElementById('eod-summary');
   if (_eod) _eod.style.display = 'none';
   position = { side: 'flat', shares: 0, entry: 0, stopPct: null, stopPrice: null };
