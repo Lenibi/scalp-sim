@@ -768,9 +768,9 @@
 <div id="app">
   <div id="topbar">
     <button id="btn-next" class="primary" title="Next session (random or sequential, see Settings)">NEXT &raquo;</button>
-    <!-- 5-SEC MODE moved into Settings drawer on mobile (still rendered here for desktop). -->
-    <label class="toggle desktop-only-toggle" style="background:#3b3a1f;border:1px solid #f6c143;padding:4px 8px;border-radius:4px;cursor:pointer;color:#f6c143;font-weight:600;align-self:center;display:inline-flex;align-items:center;gap:6px;white-space:nowrap" title="ON: only sessions with 5-sec tick data. STEP = +5s. OFF: includes 1-min sessions. STEP = +1min.">
-      <input type="checkbox" id="fivesec-toggle" style="accent-color:#f6c143;margin:0">
+    <!-- 5-SEC MODE toggle hidden -- always-on per user preference 2026-05-27 -->
+    <label class="toggle desktop-only-toggle" style="display:none">
+      <input type="checkbox" id="fivesec-toggle" checked style="accent-color:#f6c143;margin:0">
       5-SEC MODE
     </label>
     <span style="color:#888;font-family:Consolas,monospace;font-size:10px;align-self:center" title="HTML build timestamp">build 2026-05-18 21:47:48</span>
@@ -981,9 +981,9 @@
           <span>Sequential (chronological)</span>
           <input type="checkbox" id="sequential-toggle">
         </label>
-        <label class="settings-row">
+        <label class="settings-row" style="display:none">
           <span>5-sec mode</span>
-          <input type="checkbox" id="fivesec-toggle-mobile">
+          <input type="checkbox" id="fivesec-toggle-mobile" checked>
         </label>
       </div>
       <div class="settings-section">
@@ -3001,6 +3001,27 @@ setTimeout(() => {
     rescaleY(true);
   }
 }, 100);
+
+// AUTO-ADVANCE 1 TICK on page load / NEXT (added 2026-05-27 per user request).
+// Reason: sometimes the chart loads showing only an empty area, no yesterday
+// context. Auto-pressing +5s makes the chart show the first candle + scrolls
+// to the right edge consistently every time.
+setTimeout(() => {
+  try {
+    if (typeof stepN === 'function' && typeof TICK_SECONDS !== 'undefined') {
+      stepN(TICK_SECONDS);
+    }
+  } catch (e) { console.warn('Auto +5s on load failed:', e); }
+}, 250);
+
+// FORCE 5-SEC MODE ON unconditionally (toggle UI hidden per user pref).
+try {
+  localStorage.setItem('scalp_sim_fivesec_only', '1');
+  const cb1 = document.getElementById('fivesec-toggle');
+  const cb2 = document.getElementById('fivesec-toggle-mobile');
+  if (cb1) cb1.checked = true;
+  if (cb2) cb2.checked = true;
+} catch (e) {}
 </script>
 </body>
 </html>
