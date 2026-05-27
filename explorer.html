@@ -623,6 +623,30 @@
     pointer-events: none;
     z-index: 4;
   }
+  /* Intraday time markers: 9:30 AM, 4:00 PM, 8:00 PM, 12:00 AM ET */
+  .time-marker {
+    position: absolute;
+    top: 44px;
+    bottom: 30px;
+    width: 0;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .time-marker-930  { border-left: 1px dashed #4ade80; }  /* green = market open */
+  .time-marker-1600 { border-left: 1px dashed #f87171; }  /* red = market close */
+  .time-marker-2000 { border-left: 1px dotted #a78bfa; }  /* purple = AH close */
+  .time-marker-0000 { border-left: 1px dotted #888; }     /* gray = midnight */
+  .time-marker-label {
+    position: absolute;
+    top: 46px;
+    font-family: Consolas, monospace;
+    font-size: 9px;
+    pointer-events: none;
+    z-index: 5;
+    padding: 1px 3px;
+    border-radius: 2px;
+    background: rgba(15,20,25,0.7);
+  }
   #hud-time {
     font-family: "Consolas", "Courier New", monospace;
     font-size: 28px;
@@ -2011,6 +2035,44 @@ function updateDayDividers() {
     div.className = 'day-divider';
     div.style.left = (x - barSpacing / 2) + 'px';
     _dayDividerHost.appendChild(div);
+  }
+  updateTimeMarkers();
+}
+
+// Intraday time markers: 9:30 AM (open), 4:00 PM (close), 8:00 PM (AH close), 12:00 AM (midnight)
+// Bar timestamps are "fake-UTC" -- they're ET wall clock encoded as UTC.
+// So new Date(t*1000).getUTCHours() returns the ET hour.
+function updateTimeMarkers() {
+  const host = _dayDividerHost;
+  host.querySelectorAll('.time-marker, .time-marker-label').forEach(el => el.remove());
+  const data = candleSeries.data() || [];
+  if (data.length === 0) return;
+  const barSpacing = chart.timeScale().options().barSpacing;
+  // Iterate bars, identify ones at key times
+  const KEY_TIMES = {
+    '09:30': { cls: 'time-marker-930',  label: '9:30',   color: '#4ade80' },
+    '16:00': { cls: 'time-marker-1600', label: '4 PM',   color: '#f87171' },
+    '20:00': { cls: 'time-marker-2000', label: '8 PM',   color: '#a78bfa' },
+    '00:00': { cls: 'time-marker-0000', label: '12 AM',  color: '#888' },
+  };
+  for (const b of data) {
+    const d = new Date(b.time * 1000);
+    const hhmm = String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+    const cfg = KEY_TIMES[hhmm];
+    if (!cfg) continue;
+    const x = chart.timeScale().timeToCoordinate(b.time);
+    if (x === null) continue;
+    const line = document.createElement('div');
+    line.className = 'time-marker ' + cfg.cls;
+    line.style.left = (x - barSpacing / 2) + 'px';
+    host.appendChild(line);
+    // Add small label
+    const lbl = document.createElement('div');
+    lbl.className = 'time-marker-label';
+    lbl.style.left = (x + 2) + 'px';
+    lbl.style.color = cfg.color;
+    lbl.textContent = cfg.label;
+    host.appendChild(lbl);
   }
 }
 
