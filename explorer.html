@@ -353,6 +353,14 @@
     /* VWAP toggles eat horizontal space on mobile and push the clock off-screen.
        Hide on phones; user can still toggle indicators from the drawer. */
     .vwap-toggles { display: none !important; }
+    /* Prev OHLC readout: keep visible but compact on mobile so the clock
+       still has room. */
+    #prev-ohlc {
+      font-size: 10px !important;
+      gap: 4px !important;
+      padding: 0 4px !important;
+      border-left: none !important;
+    }
     .day-divider { top: 34px; }
     /* Keep +/- zoom in the chart title bar -- shrink them a touch on mobile. */
     #chart-zoom-in, #chart-zoom-out { width: 26px !important; height: 26px !important; font-size: 14px !important; }
@@ -884,6 +892,13 @@
           <span style="color:#ff77bb">Lower</span>
         </label>
       </span>
+      <span id="prev-ohlc" title="Yesterday's RTH session (9:30 AM - 4 PM ET)" style="display:inline-flex;gap:8px;align-items:center;padding:0 10px;border-left:1px solid #333;font-family:Consolas,monospace;font-size:11px;color:#aaa;white-space:nowrap">
+        <span style="color:#666">Y</span>
+        <span><span style="color:#666">O</span> <span id="prev-o">--</span></span>
+        <span><span style="color:#4ade80">H</span> <span id="prev-h">--</span></span>
+        <span><span style="color:#f87171">L</span> <span id="prev-l">--</span></span>
+        <span><span style="color:#666">C</span> <span id="prev-c">--</span></span>
+      </span>
       <span style="flex:1"></span>
       <span id="ctrl-time" style="font-family:Consolas,monospace;font-size:28px;font-weight:800;color:#f6c143;padding:0 12px;letter-spacing:0.05em;line-height:1" title="Current simulated time">--:--:-- --</span>
       <span id="ctb-account" style="font-family:Consolas,monospace;font-size:18px;font-weight:700;color:#ccc;padding:0 4px;line-height:1" title="Account value (starting + realized + unrealized P&amp;L)">$10,000</span>
@@ -1384,6 +1399,31 @@ let PREV_BARS_FULL = aggregateBars(expandBars(PREV_BARS_RAW), CANDLE_BUCKET_SECO
 let PREV_BARS = PREV_BARS_FULL.slice(-200);
 // Today (full session, for B&H baseline computation): aggregate ticks to 10-min
 let TODAY_BARS = aggregateBars(TODAY_TICKS, CANDLE_BUCKET_SECONDS);
+
+// Populate the chart-title-bar "Y O/H/L/C" readout from PREV_DATE's RAW
+// bars filtered to RTH (9:30 AM - 4 PM ET). Uses the 1-min file (always
+// loaded) so we don't depend on 5-sec presence.
+(function _renderPrevOhlc() {
+  if (!PREV_DATE) return;
+  const raw = BARS_BY_KEY[TICKER + '_' + PREV_DATE] || [];
+  const RTH_START = _datehourToFakeUtc(PREV_DATE, 9.5);   // 9:30 AM ET
+  const RTH_END   = _datehourToFakeUtc(PREV_DATE, 16);    // 4:00 PM ET
+  const rth = raw.filter(b => b.t >= RTH_START && b.t < RTH_END);
+  if (rth.length === 0) return;
+  const open  = rth[0].o;
+  const close = rth[rth.length - 1].c;
+  let high = -Infinity, low = Infinity;
+  for (const b of rth) {
+    if (b.h > high) high = b.h;
+    if (b.l < low)  low  = b.l;
+  }
+  const fmt = v => (Math.abs(v) >= 100 ? v.toFixed(2) : v.toFixed(3));
+  const setIf = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = fmt(v); };
+  setIf('prev-o', open);
+  setIf('prev-h', high);
+  setIf('prev-l', low);
+  setIf('prev-c', close);
+})();
 
 // Compute setup metrics
 const SETUP = (() => {
