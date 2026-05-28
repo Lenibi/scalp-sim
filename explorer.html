@@ -2021,53 +2021,58 @@ function _computeVolumeData(bars) {
   return out;
 }
 function _computeVWAPAndBands(bars) {
-  // RTH-only intraday VWAP grouped BY DAY. Returns one segment per RTH day
-  // -- each rendered on its own line series so no line crosses overnight.
-  // Three knobs tuned for visual quality:
-  //   WARMUP_BARS:   skip the first N bars of each day before EMITTING band
-  //                  points (still accumulate). At N=1 you get the "starts
-  //                  at a single point" trumpet collapse to zero. Higher N
-  //                  lets sigma stabilize so bands open at a real width.
-  //   SIGMA_MULT:    band width in standard deviations. TWS default ~2;
-  //                  3 makes bands visually meaningful at small bucket
-  //                  sizes (5-sec / 30-sec) without being noise.
-  //   RTH_END_HOUR:  hard cutoff at exactly 16:00 ET -- nothing emitted
-  //                  for any bar at hour >= 16.
-  // Warm up for the first 5 minutes of RTH regardless of bucket size, so the
-  // bands don't start at a single point. Floor of 4 bars in case bucket is
-  // huge (e.g., hourly).
-  const WARMUP_BARS = Math.max(4, Math.round(300 / Math.max(1, CANDLE_BUCKET_SECONDS)));
-  const SIGMA_MULT  = 2;
+  // Rolling-window VWAP + bands (matches TWS "Intraday VWAP(1, 2.0)" look:
+  // uniform-width bands that don't trumpet from zero at each session open).
+  //
+  // Per-day RTH-only (still segments per day so no line crosses overnight).
+  // Within each RTH session, maintain a sliding window of the last WINDOW_BARS
+  // bars and compute volume-weighted mean + variance over THAT window only.
+  // The window slides forward 1 bar at a time, so band width stays stable
+  // throughout the session instead of collapsing at 9:30 AM.
+  //
+  // Tunables:
+  //   WINDOW_SEC:  rolling window length in seconds (15 min default).
+  //                Auto-scaled to bucket size in bars.
+  //   SIGMA_MULT:  band width in std deviations (2.0 = TWS default).
+  //   MIN_BARS:    don't emit until the window has at least this many bars.
+  const WINDOW_SEC = 15 * 60;
+  const WINDOW_BARS = Math.max(10, Math.round(WINDOW_SEC / Math.max(1, CANDLE_BUCKET_SECONDS)));
+  const SIGMA_MULT = 2;
+  const MIN_BARS = Math.min(10, Math.max(3, Math.round(WINDOW_BARS / 3)));
   const days = new Map();
-  let cumN = 0, cumD = 0, cumP2v = 0, lastDay = null, rthBarN = 0;
+  let lastDay = null;
+  let queue = [];          // [{pv, v, p2v}]
+  let sumPV = 0, sumV = 0, sumP2V = 0;
   for (const b of bars) {
     const d = new Date((b.time + (window._etOffsetForVWAP || 0)) * 1000);
     const h = d.getUTCHours();
-    const m = d.getUTCMinutes();
-    const inRTH = (h > 9 || (h === 9 && m >= 30)) && h < 16;
+    const mm = d.getUTCMinutes();
+    const inRTH = (h > 9 || (h === 9 && mm >= 30)) && h < 16;
     const sessionKey = d.getUTCFullYear() + '-' + d.getUTCMonth() + '-' + d.getUTCDate();
     if (sessionKey !== lastDay) {
-      cumN = 0; cumD = 0; cumP2v = 0; rthBarN = 0; lastDay = sessionKey;
+      queue = []; sumPV = 0; sumV = 0; sumP2V = 0;
+      lastDay = sessionKey;
     }
     if (!inRTH) continue;
-    if ((b.v || 0) > 0) {
-      const typical = (b.high + b.low + b.close) / 3;
-      cumN += typical * b.v;
-      cumD += b.v;
-      cumP2v += typical * typical * b.v;
+    const vol = b.v || 0;
+    const typical = (b.high + b.low + b.close) / 3;
+    const pv = typical * vol;
+    const p2v = typical * typical * vol;
+    queue.push({ pv, v: vol, p2v });
+    sumPV += pv; sumV += vol; sumP2V += p2v;
+    if (queue.length > WINDOW_BARS) {
+      const old = queue.shift();
+      sumPV -= old.pv; sumV -= old.v; sumP2V -= old.p2v;
     }
-    rthBarN++;
-    // Skip warmup: don't emit until sigma has had a chance to stabilize.
-    if (rthBarN < WARMUP_BARS) continue;
-    if (cumD <= 0) continue;
-    const v = cumN / cumD;
-    const variance = Math.max(0, cumP2v / cumD - v * v);
+    if (queue.length < MIN_BARS || sumV <= 0) continue;
+    const m = sumPV / sumV;
+    const variance = Math.max(0, sumP2V / sumV - m * m);
     const sigma = Math.sqrt(variance);
     let seg = days.get(sessionKey);
     if (!seg) { seg = { day: sessionKey, vwap: [], upper: [], lower: [] }; days.set(sessionKey, seg); }
-    seg.vwap.push({ time: b.time, value: v });
-    seg.upper.push({ time: b.time, value: v + SIGMA_MULT * sigma });
-    seg.lower.push({ time: b.time, value: v - SIGMA_MULT * sigma });
+    seg.vwap.push({ time: b.time, value: m });
+    seg.upper.push({ time: b.time, value: m + SIGMA_MULT * sigma });
+    seg.lower.push({ time: b.time, value: m - SIGMA_MULT * sigma });
   }
   return Array.from(days.values());
 }
