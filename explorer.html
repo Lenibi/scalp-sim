@@ -1961,7 +1961,7 @@ vwapUpperSeries.applyOptions({ visible: _showUpper });
 vwapSeries.applyOptions({ visible: _showVWAP });
 vwapLowerSeries.applyOptions({ visible: _showLower });
 
-// Wire up the 3 checkboxes
+// Wire up the 3 checkboxes (applied to every series in the per-day pool).
 (function() {
   const cbUpper = document.getElementById('cb-upper');
   const cbVwap = document.getElementById('cb-vwap');
@@ -1969,21 +1969,21 @@ vwapLowerSeries.applyOptions({ visible: _showLower });
   if (cbUpper) {
     cbUpper.checked = _showUpper;
     cbUpper.addEventListener('change', () => {
-      vwapUpperSeries.applyOptions({ visible: cbUpper.checked });
+      _applyVwapVisibility('upper', cbUpper.checked);
       localStorage.setItem('scalp_show_upper', cbUpper.checked ? 'true' : 'false');
     });
   }
   if (cbVwap) {
     cbVwap.checked = _showVWAP;
     cbVwap.addEventListener('change', () => {
-      vwapSeries.applyOptions({ visible: cbVwap.checked });
+      _applyVwapVisibility('vwap', cbVwap.checked);
       localStorage.setItem('scalp_show_vwap', cbVwap.checked ? 'true' : 'false');
     });
   }
   if (cbLower) {
     cbLower.checked = _showLower;
     cbLower.addEventListener('change', () => {
-      vwapLowerSeries.applyOptions({ visible: cbLower.checked });
+      _applyVwapVisibility('lower', cbLower.checked);
       localStorage.setItem('scalp_show_lower', cbLower.checked ? 'true' : 'false');
     });
   }
@@ -2009,16 +2009,13 @@ function _computeVolumeData(bars) {
   return out;
 }
 function _computeVWAPAndBands(bars) {
-  // RTH-only: matches TWS Intraday VWAP behavior.
-  // Lines only have data points during 9:30 AM - 4:00 PM ET each day.
-  // To prevent lightweight-charts from drawing a straight line ACROSS the
-  // overnight gap (the "line goes to a point" artifact), we emit a
-  // WhitespaceData point ({time} with no value) at each bar OUTSIDE RTH --
-  // that breaks the line visually so each day's VWAP renders as its own
-  // separate segment.
-  const vwap = [], upper = [], lower = [];
+  // RTH-only intraday VWAP grouped BY DAY. Returns an array of per-day
+  // segments: [{ day, vwap: [...], upper: [...], lower: [...] }, ...].
+  // Each segment goes on its own line series so lightweight-charts never
+  // draws a connecting line across the overnight gap. (WhitespaceData
+  // doesn't reliably break LineSeries in v4.1.3 -- separate series do.)
+  const days = new Map();
   let cumN = 0, cumD = 0, cumP2v = 0, lastDay = null;
-  let wasInRTH = false;
   for (const b of bars) {
     const d = new Date((b.time + (window._etOffsetForVWAP || 0)) * 1000);
     const h = d.getUTCHours();
@@ -2026,47 +2023,78 @@ function _computeVWAPAndBands(bars) {
     const inRTH = (h > 9 || (h === 9 && m >= 30)) && h < 16;
     const sessionKey = d.getUTCFullYear() + '-' + d.getUTCMonth() + '-' + d.getUTCDate();
     if (sessionKey !== lastDay) { cumN = 0; cumD = 0; cumP2v = 0; lastDay = sessionKey; }
-    if (inRTH && (b.v || 0) > 0) {
+    if (!inRTH) continue;
+    if ((b.v || 0) > 0) {
       const typical = (b.high + b.low + b.close) / 3;
       cumN += typical * b.v;
       cumD += b.v;
       cumP2v += typical * typical * b.v;
     }
-    if (inRTH && cumD > 0) {
+    if (cumD > 0) {
       const v = cumN / cumD;
       const variance = Math.max(0, cumP2v / cumD - v * v);
       const sigma = Math.sqrt(variance);
-      vwap.push({ time: b.time, value: v });
-      upper.push({ time: b.time, value: v + 2 * sigma });
-      lower.push({ time: b.time, value: v - 2 * sigma });
-    } else if (wasInRTH) {
-      // First bar outside RTH after an RTH segment -- emit a single
-      // whitespace point to terminate the prior segment. (We don't emit on
-      // every non-RTH bar to avoid bloating the series array.)
-      vwap.push({ time: b.time });
-      upper.push({ time: b.time });
-      lower.push({ time: b.time });
+      let seg = days.get(sessionKey);
+      if (!seg) { seg = { day: sessionKey, vwap: [], upper: [], lower: [] }; days.set(sessionKey, seg); }
+      seg.vwap.push({ time: b.time, value: v });
+      seg.upper.push({ time: b.time, value: v + 2 * sigma });
+      seg.lower.push({ time: b.time, value: v - 2 * sigma });
     }
-    wasInRTH = inRTH;
   }
-  return { vwap, upper, lower };
+  return Array.from(days.values());
+}
+
+// Pool of (vwap, upper, lower) line-series triplets -- one per RTH day
+// shown on the chart. The first triplet is the original vwapSeries /
+// vwapUpperSeries / vwapLowerSeries created at module init; additional
+// triplets are added lazily as multi-day context expands the day count.
+const VWAP_DAY_POOL = [{ vwap: vwapSeries, upper: vwapUpperSeries, lower: vwapLowerSeries }];
+function _ensureVwapDay(idx) {
+  while (VWAP_DAY_POOL.length <= idx) {
+    const showU = localStorage.getItem('scalp_show_upper') !== 'false';
+    const showV = localStorage.getItem('scalp_show_vwap')  !== 'false';
+    const showL = localStorage.getItem('scalp_show_lower') !== 'false';
+    VWAP_DAY_POOL.push({
+      vwap:  chart.addLineSeries({ color: '#f6c143', lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        priceLineVisible: false, crosshairMarkerVisible: false,
+        lastValueVisible: false, visible: showV }),
+      upper: chart.addLineSeries({ color: '#66aaff', lineWidth: 1,
+        priceLineVisible: false, crosshairMarkerVisible: false,
+        lastValueVisible: false, visible: showU }),
+      lower: chart.addLineSeries({ color: '#ff77bb', lineWidth: 1,
+        priceLineVisible: false, crosshairMarkerVisible: false,
+        lastValueVisible: false, visible: showL }),
+    });
+  }
+  return VWAP_DAY_POOL[idx];
+}
+function _applyVwapVisibility(kind, visible) {
+  for (const t of VWAP_DAY_POOL) t[kind].applyOptions({ visible });
 }
 function _refreshAuxSeries(bars) {
   if (bars && bars.length) {
     try { window._etOffsetForVWAP = _etOffsetSec(bars[0].time); } catch (e) {}
   }
+  // Wipe all pool series first; if there are no bars, we're done.
+  for (const t of VWAP_DAY_POOL) {
+    t.vwap.setData([]);
+    t.upper.setData([]);
+    t.lower.setData([]);
+  }
   if (!bars || !bars.length) {
     volumeSeries.setData([]);
-    vwapSeries.setData([]);
-    vwapUpperSeries.setData([]);
-    vwapLowerSeries.setData([]);
     return;
   }
   volumeSeries.setData(_computeVolumeData(bars));
-  const vb = _computeVWAPAndBands(bars);
-  vwapSeries.setData(vb.vwap);
-  vwapUpperSeries.setData(vb.upper);
-  vwapLowerSeries.setData(vb.lower);
+  // One line-series triplet per RTH day so no line ever crosses an overnight gap.
+  const segments = _computeVWAPAndBands(bars);
+  for (let i = 0; i < segments.length; i++) {
+    const t = _ensureVwapDay(i);
+    t.vwap.setData(segments[i].vwap);
+    t.upper.setData(segments[i].upper);
+    t.lower.setData(segments[i].lower);
+  }
 }
 
 // Hook candleSeries.setData and update to also refresh aux series
