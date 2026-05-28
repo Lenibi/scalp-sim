@@ -2656,11 +2656,18 @@ function advance() {
   }
   liveTickPrice = tick.close;
   candleSeries.update(liveCandle);
-  // First-tick anchor: when chart starts empty (24h sessions with no PREV_BARS),
-  // we need to scroll to the new bar so the user can see it.
+  // First-tick anchor: set a sensible default visible range. We do NOT call
+  // fitContent() because PREV_BARS can span multiple days (per the Context
+  // days setting), and fitting everything would compress 30-sec candles to
+  // sub-pixel width. Show ~6h of context behind the live candle + 30 min
+  // of room ahead; the user can pinch out to see deeper context.
   if (tickIdx === 0) {
-    try { chart.timeScale().scrollToRealTime(); } catch (e) {}
-    try { chart.timeScale().fitContent(); } catch (e) {}
+    try {
+      chart.timeScale().setVisibleRange({
+        from: bar.time - 6 * 3600,
+        to:   bar.time + 30 * 60,
+      });
+    } catch (e) {}
   }
   tickIdx++;
   // Stop loss check: compare this CURRENT tick's H/L (not liveCandle.H/L,
@@ -2743,7 +2750,18 @@ function reset() {
   pendingEntry = null;
   renderTradesTable();
   if (activePriceLine) { candleSeries.removePriceLine(activePriceLine); activePriceLine = null; }
-  chart.timeScale().fitContent();
+  // Show last ~6h of PREV_BARS context, not all CONTEXT_DAYS at once.
+  if (PREV_BARS && PREV_BARS.length > 0) {
+    const last = PREV_BARS[PREV_BARS.length - 1].time;
+    try {
+      chart.timeScale().setVisibleRange({
+        from: last - 6 * 3600,
+        to:   last + 30 * 60,
+      });
+    } catch (e) {}
+  } else {
+    chart.timeScale().fitContent();
+  }
   // Always reveal the first bar so the user sees today's open immediately
   advance();
   setTimeout(() => { updateOverlay(); updatePositionGradient(); }, 50);
