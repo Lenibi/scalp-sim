@@ -2021,20 +2021,34 @@ function _computeVolumeData(bars) {
   return out;
 }
 function _computeVWAPAndBands(bars) {
-  // RTH-only intraday VWAP grouped BY DAY. Returns an array of per-day
-  // segments: [{ day, vwap: [...], upper: [...], lower: [...] }, ...].
-  // Each segment goes on its own line series so lightweight-charts never
-  // draws a connecting line across the overnight gap. (WhitespaceData
-  // doesn't reliably break LineSeries in v4.1.3 -- separate series do.)
+  // RTH-only intraday VWAP grouped BY DAY. Returns one segment per RTH day
+  // -- each rendered on its own line series so no line crosses overnight.
+  // Three knobs tuned for visual quality:
+  //   WARMUP_BARS:   skip the first N bars of each day before EMITTING band
+  //                  points (still accumulate). At N=1 you get the "starts
+  //                  at a single point" trumpet collapse to zero. Higher N
+  //                  lets sigma stabilize so bands open at a real width.
+  //   SIGMA_MULT:    band width in standard deviations. TWS default ~2;
+  //                  3 makes bands visually meaningful at small bucket
+  //                  sizes (5-sec / 30-sec) without being noise.
+  //   RTH_END_HOUR:  hard cutoff at exactly 16:00 ET -- nothing emitted
+  //                  for any bar at hour >= 16.
+  // Warm up for the first 5 minutes of RTH regardless of bucket size, so the
+  // bands don't start at a single point. Floor of 4 bars in case bucket is
+  // huge (e.g., hourly).
+  const WARMUP_BARS = Math.max(4, Math.round(300 / Math.max(1, CANDLE_BUCKET_SECONDS)));
+  const SIGMA_MULT  = 2;
   const days = new Map();
-  let cumN = 0, cumD = 0, cumP2v = 0, lastDay = null;
+  let cumN = 0, cumD = 0, cumP2v = 0, lastDay = null, rthBarN = 0;
   for (const b of bars) {
     const d = new Date((b.time + (window._etOffsetForVWAP || 0)) * 1000);
     const h = d.getUTCHours();
     const m = d.getUTCMinutes();
     const inRTH = (h > 9 || (h === 9 && m >= 30)) && h < 16;
     const sessionKey = d.getUTCFullYear() + '-' + d.getUTCMonth() + '-' + d.getUTCDate();
-    if (sessionKey !== lastDay) { cumN = 0; cumD = 0; cumP2v = 0; lastDay = sessionKey; }
+    if (sessionKey !== lastDay) {
+      cumN = 0; cumD = 0; cumP2v = 0; rthBarN = 0; lastDay = sessionKey;
+    }
     if (!inRTH) continue;
     if ((b.v || 0) > 0) {
       const typical = (b.high + b.low + b.close) / 3;
@@ -2042,16 +2056,18 @@ function _computeVWAPAndBands(bars) {
       cumD += b.v;
       cumP2v += typical * typical * b.v;
     }
-    if (cumD > 0) {
-      const v = cumN / cumD;
-      const variance = Math.max(0, cumP2v / cumD - v * v);
-      const sigma = Math.sqrt(variance);
-      let seg = days.get(sessionKey);
-      if (!seg) { seg = { day: sessionKey, vwap: [], upper: [], lower: [] }; days.set(sessionKey, seg); }
-      seg.vwap.push({ time: b.time, value: v });
-      seg.upper.push({ time: b.time, value: v + 2 * sigma });
-      seg.lower.push({ time: b.time, value: v - 2 * sigma });
-    }
+    rthBarN++;
+    // Skip warmup: don't emit until sigma has had a chance to stabilize.
+    if (rthBarN < WARMUP_BARS) continue;
+    if (cumD <= 0) continue;
+    const v = cumN / cumD;
+    const variance = Math.max(0, cumP2v / cumD - v * v);
+    const sigma = Math.sqrt(variance);
+    let seg = days.get(sessionKey);
+    if (!seg) { seg = { day: sessionKey, vwap: [], upper: [], lower: [] }; days.set(sessionKey, seg); }
+    seg.vwap.push({ time: b.time, value: v });
+    seg.upper.push({ time: b.time, value: v + SIGMA_MULT * sigma });
+    seg.lower.push({ time: b.time, value: v - SIGMA_MULT * sigma });
   }
   return Array.from(days.values());
 }
