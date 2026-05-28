@@ -1185,23 +1185,16 @@ function _aggregateTo1Min(bars5s) {
 function _loadSessionBars(ticker, date) {
   const key = ticker + '_' + date;
   if (BARS_BY_KEY[key]) return;
-  // 1-min: chart context, prev-day candles, fast load. Always tried first.
+  // 5-sec is the only data source. Catalog only contains sessions with
+  // 5-sec files, so a miss means the session shouldn't have been picked.
   try {
-    const dayData = _syncFetchJson('data/days_1min/' + ticker + '_' + date + '.json');
-    BARS_BY_KEY[key] = dayData;
+    const fiveSec = _syncFetchJson('data/days_5sec/' + ticker + '_' + date + '.json');
+    BARS_BY_KEY[key] = fiveSec;
+    BARS_5S_BY_KEY[key] = fiveSec;
   } catch (e) {
-    console.warn('1-min day file missing for ' + key + ':', e.message);
+    console.warn('5-sec day file missing for ' + key + ':', e.message);
     BARS_BY_KEY[key] = [];
-  }
-  // 5-sec: REAL 5-second bars for tick-by-tick playback. ~1 MB per day.
-  // If missing, fall back to the 1-min file (mode still works, just with
-  // 1-min ticks -- the catalog's has_5sec flag is the source of truth for
-  // whether real 5-sec data is available).
-  try {
-    const fiveSecData = _syncFetchJson('data/days_5sec/' + ticker + '_' + date + '.json');
-    BARS_5S_BY_KEY[key] = fiveSecData;
-  } catch (e) {
-    BARS_5S_BY_KEY[key] = BARS_BY_KEY[key];
+    BARS_5S_BY_KEY[key] = [];
   }
 }
 
