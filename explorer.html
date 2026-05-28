@@ -1291,8 +1291,23 @@ const SESSION = pickSession();
 const TICKER = SESSION.ticker;
 const DATE = SESSION.date;
 const PREV_DATE = SESSION.prev_date;
-// Context = all prior trading days (TWS-style continuous history)
-const CONTEXT_DATES = SESSION.context_dates || [PREV_DATE];
+// Context = previous N trading days. Walk back the catalog's prev_date chain
+// from SESSION.date so a zoom-out shows N full days behind today.
+const CONTEXT_DAYS = 4;
+function _priorTradingDates(ticker, date, n) {
+  const out = [];
+  let cur = date;
+  for (let i = 0; i < n; i++) {
+    const entry = CATALOG.find(s => s.ticker === ticker && s.date === cur);
+    if (!entry || !entry.prev_date) break;
+    out.push(entry.prev_date);
+    cur = entry.prev_date;
+  }
+  return out.reverse();  // oldest first so flatMap preserves chronological order
+}
+const CONTEXT_DATES = _priorTradingDates(TICKER, DATE, CONTEXT_DAYS);
+// Ensure each context date is loaded (pickSession only loaded PREV_DATE).
+for (const cd of CONTEXT_DATES) _loadSessionBars(TICKER, cd);
 const CONTEXT_BARS_RAW = CONTEXT_DATES.flatMap(d => BARS_BY_KEY[TICKER + '_' + d] || []);
 
 // Session-start setting: ET wall-clock hour where the session window begins.
@@ -1394,11 +1409,11 @@ const TODAY_5S_BARS = expandBars(_todayWithSessionStart(TICKER, DATE, PREV_DATE,
 const TODAY_1M_BARS = expandBars(TODAY_BARS_RAW);
 const TODAY_TICKS = FIVE_SEC_MODE ? TODAY_5S_BARS : TODAY_1M_BARS;
 
-// Context (prior days): aggregate 1-min to 10-min for display.
-// Cap to last ~30 bars of yesterday so the chart has context to the left
-// of today's live candle without dragging in a week of history.
+// Context (prior days): aggregate 5-sec ticks into the active bucket size
+// for display. Keep the FULL multi-day history so the user can zoom out
+// and see all CONTEXT_DAYS of prior sessions at once.
 let PREV_BARS_FULL = aggregateBars(expandBars(PREV_BARS_RAW), CANDLE_BUCKET_SECONDS);
-let PREV_BARS = PREV_BARS_FULL.slice(-200);
+let PREV_BARS = PREV_BARS_FULL;
 // Today (full session, for B&H baseline computation): aggregate ticks to 10-min
 let TODAY_BARS = aggregateBars(TODAY_TICKS, CANDLE_BUCKET_SECONDS);
 
@@ -1578,7 +1593,7 @@ function rebuildBuckets(newBucketSec) {
   localStorage.setItem('scalp_sim_bucket_sec', String(newBucketSec));
   // Re-aggregate everything at the new bucket
   PREV_BARS_FULL = aggregateBars(expandBars(PREV_BARS_RAW), CANDLE_BUCKET_SECONDS);
-  PREV_BARS = PREV_BARS_FULL.slice(-200);
+  PREV_BARS = PREV_BARS_FULL;
   TODAY_BARS = aggregateBars(TODAY_TICKS, CANDLE_BUCKET_SECONDS);
   // Wipe the chart series and replay ticks 0..(tickIdx-1) to rebuild the
   // live candle at the new bucket size. Position state stays intact.
