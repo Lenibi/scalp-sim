@@ -1401,8 +1401,13 @@ let PREV_BARS = PREV_BARS_FULL.slice(-200);
 let TODAY_BARS = aggregateBars(TODAY_TICKS, CANDLE_BUCKET_SECONDS);
 
 // Populate the chart-title-bar "Y O/H/L/C" readout from PREV_DATE's RAW
-// bars filtered to RTH (9:30 AM - 4 PM ET). Uses the 1-min file (always
-// loaded) so we don't depend on 5-sec presence.
+// bars filtered to RTH (9:30 AM - 4 PM ET). All values shown as % MOVES
+// relative to yesterday's RTH open, so:
+//   O = 0.00% (anchor)
+//   H = +x% (highest run from open)
+//   L = -x% (lowest dip from open)
+//   C = +/- x% (daily return)
+// Uses the 1-min file (always loaded) so we don't depend on 5-sec presence.
 (function _renderPrevOhlc() {
   if (!PREV_DATE) return;
   const raw = BARS_BY_KEY[TICKER + '_' + PREV_DATE] || [];
@@ -1417,12 +1422,14 @@ let TODAY_BARS = aggregateBars(TODAY_TICKS, CANDLE_BUCKET_SECONDS);
     if (b.h > high) high = b.h;
     if (b.l < low)  low  = b.l;
   }
-  const fmt = v => (Math.abs(v) >= 100 ? v.toFixed(2) : v.toFixed(3));
-  const setIf = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = fmt(v); };
-  setIf('prev-o', open);
-  setIf('prev-h', high);
-  setIf('prev-l', low);
-  setIf('prev-c', close);
+  if (!(open > 0)) return;
+  const pct = v => ((v - open) / open * 100);
+  const fmtPct = p => (p >= 0 ? '+' : '') + p.toFixed(2) + '%';
+  const setIf = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setIf('prev-o', fmtPct(0));            // anchor
+  setIf('prev-h', fmtPct(pct(high)));
+  setIf('prev-l', fmtPct(pct(low)));
+  setIf('prev-c', fmtPct(pct(close)));
 })();
 
 // Compute setup metrics
