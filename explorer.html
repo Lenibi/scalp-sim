@@ -1289,25 +1289,37 @@ const CONTEXT_BARS_RAW = CONTEXT_DATES.flatMap(d => BARS_BY_KEY[TICKER + '_' + d
 //   20   = 8 PM previous day  (overnight start, DEFAULT)
 const _sessionStartRaw = localStorage.getItem(LS_KEYS.sessionStart);
 const SESSION_START_HOUR = _sessionStartRaw === null ? 20 : parseFloat(_sessionStartRaw);
-const SESSION_START_MIN  = Math.round(SESSION_START_HOUR * 60);  // ET minutes-of-day
 
-function _minuteOfBar(b) {
-  const d = new Date(b.t * 1000);          // fake-UTC: UTC h/m == ET wall clock
-  return d.getUTCHours() * 60 + d.getUTCMinutes();
+// Convert (date-string, ET hour-of-day) to a fake-UTC unix timestamp -- the
+// same encoding the bar 't' field uses. We build a UTC Date from the ET
+// wall-clock components so Date#getTime() / 1000 yields the fake-UTC ts.
+function _datehourToFakeUtc(dateStr, hour) {
+  const hh = Math.floor(hour);
+  const mm = Math.round((hour - hh) * 60);
+  const y = parseInt(dateStr.slice(0, 4), 10);
+  const mo = parseInt(dateStr.slice(5, 7), 10) - 1;
+  const d = parseInt(dateStr.slice(8, 10), 10);
+  return Math.floor(Date.UTC(y, mo, d, hh, mm, 0) / 1000);
 }
+
 function _todayWithSessionStart(ticker, date, prevDate, fiveSec) {
-  const todayKey = ticker + '_' + date;
-  const prevKey = ticker + '_' + prevDate;
   const store = fiveSec ? BARS_5S_BY_KEY : BARS_BY_KEY;
-  const today = store[todayKey] || [];
-  // Session starts within TODAY's calendar day: drop bars before that minute.
+  const today = store[ticker + '_' + date] || [];
+  // Today-anchored start (e.g. 4 AM or 9:30 AM): keep today's bars at or
+  // after that absolute moment. Anything earlier (or prev-day's overnight
+  // tail living in today's file) is dropped.
   if (SESSION_START_HOUR < 12) {
-    return today.filter(b => _minuteOfBar(b) >= SESSION_START_MIN);
+    const threshold = _datehourToFakeUtc(date, SESSION_START_HOUR);
+    return today.filter(b => b.t >= threshold);
   }
-  // Session starts at SESSION_START_HOUR of YESTERDAY -> prepend yesterday's
-  // tail (bars whose ET minute-of-day >= SESSION_START_MIN) to today's bars.
-  const prev = (prevDate && store[prevKey]) ? store[prevKey] : [];
-  const prevTail = prev.filter(b => _minuteOfBar(b) >= SESSION_START_MIN);
+  // Prev-day-anchored start (16 = AH start, 20 = overnight start): cutoff is
+  // PREV_DATE @ SESSION_START_HOUR. Walk prev's bars in order and keep all
+  // whose timestamp >= cutoff -- this correctly includes the 8 PM->midnight
+  // segment AND the post-midnight 12-4 AM overnight bars (both live in
+  // prev's file as part of its OVERNIGHT chunk).
+  const prev = (prevDate && store[ticker + '_' + prevDate]) ? store[ticker + '_' + prevDate] : [];
+  const cutoff = prevDate ? _datehourToFakeUtc(prevDate, SESSION_START_HOUR) : -Infinity;
+  const prevTail = prev.filter(b => b.t >= cutoff);
   return prevTail.concat(today);
 }
 
