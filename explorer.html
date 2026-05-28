@@ -1400,33 +1400,47 @@ let PREV_BARS = PREV_BARS_FULL.slice(-200);
 // Today (full session, for B&H baseline computation): aggregate ticks to 10-min
 let TODAY_BARS = aggregateBars(TODAY_TICKS, CANDLE_BUCKET_SECONDS);
 
-// Populate the chart-title-bar "Y O/H/L/C" readout from PREV_DATE's RAW
-// bars filtered to RTH (9:30 AM - 4 PM ET). All values shown as % MOVES
-// relative to yesterday's RTH open, so:
-//   O = 0.00% (anchor)
-//   H = +x% (highest run from open)
-//   L = -x% (lowest dip from open)
-//   C = +/- x% (daily return)
-// Uses the 1-min file (always loaded) so we don't depend on 5-sec presence.
+// Populate the chart-title-bar "Y O/H/L/C" readout for PREV_DATE's RTH
+// session (9:30 AM - 4 PM ET), all values shown as % MOVES relative to
+// the DAY-BEFORE-PREV_DATE's RTH close -- same convention TWS uses for
+// the % change column. So:
+//   O = overnight gap (PREV_DATE open vs prior close)
+//   H = highest move from prior close
+//   L = lowest move  from prior close
+//   C = daily return (PREV_DATE close vs prior close)
+// Fallback if the prior-prior day isn't loadable: anchor on PREV_DATE's
+// own open instead (so O becomes 0% anchor, H/L/C are intraday % moves).
+function _rthBars(ticker, date) {
+  const raw = BARS_BY_KEY[ticker + '_' + date] || [];
+  const a = _datehourToFakeUtc(date, 9.5);
+  const b = _datehourToFakeUtc(date, 16);
+  return raw.filter(x => x.t >= a && x.t < b);
+}
 (function _renderPrevOhlc() {
   if (!PREV_DATE) return;
-  const raw = BARS_BY_KEY[TICKER + '_' + PREV_DATE] || [];
-  const RTH_START = _datehourToFakeUtc(PREV_DATE, 9.5);   // 9:30 AM ET
-  const RTH_END   = _datehourToFakeUtc(PREV_DATE, 16);    // 4:00 PM ET
-  const rth = raw.filter(b => b.t >= RTH_START && b.t < RTH_END);
+  const rth = _rthBars(TICKER, PREV_DATE);
   if (rth.length === 0) return;
   const open  = rth[0].o;
   const close = rth[rth.length - 1].c;
   let high = -Infinity, low = Infinity;
-  for (const b of rth) {
-    if (b.h > high) high = b.h;
-    if (b.l < low)  low  = b.l;
+  for (const x of rth) { if (x.h > high) high = x.h; if (x.l < low) low = x.l; }
+
+  // Try to find day-before-PREV_DATE via the catalog so we can use its
+  // RTH close as the anchor (TWS-style baseline).
+  let anchor = null;
+  const prevEntry = CATALOG.find(s => s.ticker === TICKER && s.date === PREV_DATE);
+  const priorDate = prevEntry ? prevEntry.prev_date : null;
+  if (priorDate) {
+    try { _loadSessionBars(TICKER, priorDate); } catch (e) {}
+    const priorRth = _rthBars(TICKER, priorDate);
+    if (priorRth.length > 0) anchor = priorRth[priorRth.length - 1].c;  // 4 PM close
   }
-  if (!(open > 0)) return;
-  const pct = v => ((v - open) / open * 100);
+  if (!anchor || !(anchor > 0)) anchor = open;   // fallback: yesterday's own open
+
+  const pct = v => ((v - anchor) / anchor * 100);
   const fmtPct = p => (p >= 0 ? '+' : '') + p.toFixed(2) + '%';
   const setIf = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  setIf('prev-o', fmtPct(0));            // anchor
+  setIf('prev-o', fmtPct(pct(open)));
   setIf('prev-h', fmtPct(pct(high)));
   setIf('prev-l', fmtPct(pct(low)));
   setIf('prev-c', fmtPct(pct(close)));
