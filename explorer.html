@@ -2010,11 +2010,15 @@ function _computeVolumeData(bars) {
 }
 function _computeVWAPAndBands(bars) {
   // RTH-only: matches TWS Intraday VWAP behavior.
-  // Line is HIDDEN outside 9:30 AM - 4:00 PM ET (no data points emitted).
-  // Accumulation also restricted to RTH bars (skips overnight thin volume).
-  // Resets at 9:30 AM each new ET date.
+  // Lines only have data points during 9:30 AM - 4:00 PM ET each day.
+  // To prevent lightweight-charts from drawing a straight line ACROSS the
+  // overnight gap (the "line goes to a point" artifact), we emit a
+  // WhitespaceData point ({time} with no value) at each bar OUTSIDE RTH --
+  // that breaks the line visually so each day's VWAP renders as its own
+  // separate segment.
   const vwap = [], upper = [], lower = [];
   let cumN = 0, cumD = 0, cumP2v = 0, lastDay = null;
+  let wasInRTH = false;
   for (const b of bars) {
     const d = new Date((b.time + (window._etOffsetForVWAP || 0)) * 1000);
     const h = d.getUTCHours();
@@ -2035,7 +2039,15 @@ function _computeVWAPAndBands(bars) {
       vwap.push({ time: b.time, value: v });
       upper.push({ time: b.time, value: v + 2 * sigma });
       lower.push({ time: b.time, value: v - 2 * sigma });
+    } else if (wasInRTH) {
+      // First bar outside RTH after an RTH segment -- emit a single
+      // whitespace point to terminate the prior segment. (We don't emit on
+      // every non-RTH bar to avoid bloating the series array.)
+      vwap.push({ time: b.time });
+      upper.push({ time: b.time });
+      lower.push({ time: b.time });
     }
+    wasInRTH = inRTH;
   }
   return { vwap, upper, lower };
 }
