@@ -2240,7 +2240,14 @@ function updateTimeMarkers() {
   const data = candleSeries.data() || [];
   if (data.length === 0) return;
   const barSpacing = chart.timeScale().options().barSpacing;
-  // Iterate bars, identify ones at key times
+  // Collect x positions of already-drawn day-dividers so we don't stack a
+  // time-marker on top of one (e.g. at 20:00 when 8 PM coincides with the
+  // chart's session start). 2px tolerance to absorb sub-pixel rounding.
+  const dayDividerXs = [];
+  host.querySelectorAll('.day-divider').forEach(el => {
+    const lx = parseFloat(el.style.left);
+    if (!isNaN(lx)) dayDividerXs.push(lx);
+  });
   const KEY_TIMES = {
     '09:30': { cls: 'time-marker-930',  label: '9:30',   color: '#4ade80' },
     '16:00': { cls: 'time-marker-1600', label: '4 PM',   color: '#f87171' },
@@ -2254,11 +2261,13 @@ function updateTimeMarkers() {
     if (!cfg) continue;
     const x = chart.timeScale().timeToCoordinate(b.time);
     if (x === null) continue;
+    const linePx = x - barSpacing / 2;
+    // Skip if a day-divider is already at (essentially) the same x.
+    if (dayDividerXs.some(dx => Math.abs(dx - linePx) < 2)) continue;
     const line = document.createElement('div');
     line.className = 'time-marker ' + cfg.cls;
-    line.style.left = (x - barSpacing / 2) + 'px';
+    line.style.left = linePx + 'px';
     host.appendChild(line);
-    // Add small label
     const lbl = document.createElement('div');
     lbl.className = 'time-marker-label';
     lbl.style.left = (x + 2) + 'px';
