@@ -1319,7 +1319,25 @@ function _priorTradingDates(ticker, date, n) {
 const CONTEXT_DATES = _priorTradingDates(TICKER, DATE, CONTEXT_DAYS);
 // Ensure each context date is loaded (pickSession only loaded PREV_DATE).
 for (const cd of CONTEXT_DATES) _loadSessionBars(TICKER, cd);
-const CONTEXT_BARS_RAW = CONTEXT_DATES.flatMap(d => BARS_BY_KEY[TICKER + '_' + d] || []);
+// Concatenate + de-dupe by timestamp. Adjacent day files overlap slightly
+// (IBKR's SMART_AM chunk bleeds ~20 min before the 4 AM start), so without
+// dedup the candle series ends up with duplicate timestamps -- which makes
+// aggregation produce NaN and lightweight-charts throw "Value is null".
+const CONTEXT_BARS_RAW = (function _mergeContext() {
+  const seen = new Set();
+  const out = [];
+  for (const d of CONTEXT_DATES) {
+    const arr = BARS_BY_KEY[TICKER + '_' + d] || [];
+    for (const b of arr) {
+      if (seen.has(b.t)) continue;
+      seen.add(b.t);
+      out.push(b);
+    }
+  }
+  // Sort defensively in case file ordering plus dedup left anything jumbled.
+  out.sort((a, b) => a.t - b.t);
+  return out;
+})();
 
 // Session-start setting: ET wall-clock hour where the session window begins.
 // Stored as a float so 9:30 AM is 9.5. Values <12 are interpreted as today;
@@ -1356,14 +1374,20 @@ function _todayWithSessionStart(ticker, date, prevDate, fiveSec) {
     return today.filter(b => b.t >= threshold);
   }
   // Prev-day-anchored start (16 = AH start, 20 = overnight start): cutoff is
-  // PREV_DATE @ SESSION_START_HOUR. Walk prev's bars in order and keep all
-  // whose timestamp >= cutoff -- this correctly includes the 8 PM->midnight
-  // segment AND the post-midnight 12-4 AM overnight bars (both live in
-  // prev's file as part of its OVERNIGHT chunk).
+  // PREV_DATE @ SESSION_START_HOUR. prevTail covers prev_date 8 PM through
+  // ~4 AM today (its OVERNIGHT chunk). Today's file starts at ~3:40 AM
+  // (IBKR bleed), so the join has 20-min overlap -- de-dupe by timestamp.
   const prev = (prevDate && store[ticker + '_' + prevDate]) ? store[ticker + '_' + prevDate] : [];
   const cutoff = prevDate ? _datehourToFakeUtc(prevDate, SESSION_START_HOUR) : -Infinity;
   const prevTail = prev.filter(b => b.t >= cutoff);
-  return prevTail.concat(today);
+  const seen = new Set();
+  const out = [];
+  for (const b of prevTail.concat(today)) {
+    if (seen.has(b.t)) continue;
+    seen.add(b.t);
+    out.push(b);
+  }
+  return out;
 }
 
 // Single cutoff used by BOTH halves of the chart so they never overlap:
