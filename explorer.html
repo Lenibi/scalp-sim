@@ -353,13 +353,11 @@
     /* VWAP toggles eat horizontal space on mobile and push the clock off-screen.
        Hide on phones; user can still toggle indicators from the drawer. */
     .vwap-toggles { display: none !important; }
-    /* Prev OHLC readout: keep visible but compact on mobile so the clock
-       still has room. */
+    /* Prev OHLC readout (now lives in the topbar under the session id):
+       slightly smaller on phones. */
     #prev-ohlc {
       font-size: 10px !important;
-      gap: 4px !important;
-      padding: 0 4px !important;
-      border-left: none !important;
+      gap: 5px !important;
     }
     .day-divider { top: 34px; }
     /* Keep +/- zoom in the chart title bar -- shrink them a touch on mobile. */
@@ -537,7 +535,18 @@
     border-radius: 50%;
     background: #fff;
   }
-  #chart { width: 100%; height: 100%; }
+  /* Position the chart canvas BELOW the absolute overlays (chart-title-bar
+     44px + ticker-header 22px + session-progress 7px = 73px) so close
+     markers/price labels near the top of the visible price range don't
+     get hidden underneath the phase loader strip. */
+  #chart {
+    position: absolute;
+    top: 73px;
+    left: 0; right: 0; bottom: 0;
+  }
+  body.compact #chart {
+    top: 57px;   /* mobile: 34 + 18 + 5 */
+  }
   #overlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
   #pos-gradient {
     position: absolute;
@@ -834,6 +843,13 @@
       <div style="display:flex;gap:4px;margin-top:3px;align-self:flex-start">
         <span class="live-badge" id="fivesec-badge" style="display:none">5-SEC LIVE</span>
       </div>
+      <div id="prev-ohlc" title="Yesterday's RTH (9:30 AM - 4 PM ET) -- %% moves from prior close" style="display:flex;gap:7px;align-items:center;margin-top:3px;align-self:flex-start;font-family:Consolas,monospace;font-size:11px;color:#aaa;white-space:nowrap">
+        <span style="color:#666">Y</span>
+        <span><span style="color:#666">O</span> <span id="prev-o">--</span></span>
+        <span><span style="color:#4ade80">H</span> <span id="prev-h">--</span></span>
+        <span><span style="color:#f87171">L</span> <span id="prev-l">--</span></span>
+        <span><span style="color:#666">C</span> <span id="prev-c">--</span></span>
+      </div>
     </div>
     <div class="hud-section hud-divider">
       <div id="hud-time">--:--</div>
@@ -891,13 +907,6 @@
           <input type="checkbox" id="cb-lower" style="accent-color:#ff77bb;cursor:pointer">
           <span style="color:#ff77bb">Lower</span>
         </label>
-      </span>
-      <span id="prev-ohlc" title="Yesterday's RTH session (9:30 AM - 4 PM ET)" style="display:inline-flex;gap:8px;align-items:center;padding:0 10px;border-left:1px solid #333;font-family:Consolas,monospace;font-size:11px;color:#aaa;white-space:nowrap">
-        <span style="color:#666">Y</span>
-        <span><span style="color:#666">O</span> <span id="prev-o">--</span></span>
-        <span><span style="color:#4ade80">H</span> <span id="prev-h">--</span></span>
-        <span><span style="color:#f87171">L</span> <span id="prev-l">--</span></span>
-        <span><span style="color:#666">C</span> <span id="prev-c">--</span></span>
       </span>
       <span style="flex:1"></span>
       <span id="ctrl-time" style="font-family:Consolas,monospace;font-size:28px;font-weight:800;color:#f6c143;padding:0 12px;letter-spacing:0.05em;line-height:1" title="Current simulated time">--:--:-- --</span>
