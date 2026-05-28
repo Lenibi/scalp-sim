@@ -339,17 +339,29 @@
     body.compact #drawer-backdrop.open { display: block; }
     /* Compress chart inner bars on mobile */
     #chart-title-bar { height: 34px; gap: 4px; padding: 0 6px; }
+    /* Kill the flex:1 spacer on mobile -- on desktop it pushes the clock to
+       the right edge past the VWAP toggles, but on mobile (toggles hidden)
+       it leaves a giant empty middle and pushes the account dollar amount
+       off-screen. Pack everything left-to-right tightly instead. */
+    body.compact #chart-title-bar > span[style*="flex:1"] {
+      flex: 0 0 4px !important;
+    }
     #ticker-header { top: 34px; height: 18px; font-size: 11px; gap: 6px; padding: 0 6px; }
     #session-progress { top: 52px; height: 5px; }
     #ctrl-time {
-      font-size: 18px !important;
+      font-size: 17px !important;
       font-weight: 800 !important;
-      padding: 0 6px !important;
+      padding: 0 3px !important;
       letter-spacing: 0 !important;
       white-space: nowrap;
       flex: 0 0 auto;
     }
-    #ctb-account { font-size: 13px !important; padding: 0 4px !important; white-space: nowrap; }
+    #ctb-account {
+      font-size: 12px !important;
+      padding: 0 2px !important;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
     /* VWAP toggles eat horizontal space on mobile and push the clock off-screen.
        Hide on phones; user can still toggle indicators from the drawer. */
     .vwap-toggles { display: none !important; }
