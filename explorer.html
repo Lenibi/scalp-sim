@@ -1323,7 +1323,16 @@ function _todayWithSessionStart(ticker, date, prevDate, fiveSec) {
   return prevTail.concat(today);
 }
 
-const PREV_BARS_RAW = CONTEXT_BARS_RAW;
+// Single cutoff used by BOTH halves of the chart so they never overlap:
+//   - PREV_BARS_RAW   = context, strictly BEFORE the cutoff
+//   - TODAY_BARS_RAW  = live area, at or AFTER the cutoff
+// (lightweight-charts throws "Cannot update oldest data" if a live update
+// has a timestamp older than the chart's oldest static bar.)
+const SESSION_CUTOFF_T = (SESSION_START_HOUR < 12)
+  ? _datehourToFakeUtc(DATE, SESSION_START_HOUR)
+  : (PREV_DATE ? _datehourToFakeUtc(PREV_DATE, SESSION_START_HOUR) : -Infinity);
+
+const PREV_BARS_RAW = CONTEXT_BARS_RAW.filter(b => b.t < SESSION_CUTOFF_T);
 const TODAY_BARS_RAW = _todayWithSessionStart(TICKER, DATE, PREV_DATE, false);
 
 function expandBars(raw) {
